@@ -1,0 +1,51 @@
+###
+### A complete description of a Prefect Deployment for flow 'covid-prediction'
+###
+name: CovidPrev_EC2
+description: null
+tags:
+- tag_CovidPrev_EC2
+schedule:
+  cron: 20 12 * * *
+  timezone: Europe/Berlin
+parameters: {
+    "Prov_St": "Madrid",
+    "run_id": "16082a31f2be4eadb6f368b4ded2d309",
+}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command:
+  - python
+  - -m
+  - prefect.engine
+  stream_output: true
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: covid-prediction
+manifest_path: covid_prediction-manifest.json
+storage:
+  bucket_path: prefect-cloud-flow-codes/covid_predictor
+  aws_access_key_id: null
+  aws_secret_access_key: null
+  _is_anonymous: true
+  _block_document_name: anonymous-99916af1-e1f3-41a6-b261-b2d00caf2de1
+  _block_document_id: 312db4fd-d759-4d57-8dc8-c893d27d892c
+  _block_type_slug: s3
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    Prov_St:
+      title: Prov_St
+      type: string
+    run_id:
+      title: run_id
+      type: string
+  required:
+  - Prov_St
+  - run_id
+  definitions: null

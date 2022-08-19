@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+sklearn = "*"
+pandas = "*"
+numpy = "*"
+datetime = "*"
+mlflow = "*"
+prefect = "*"
+
+[dev-packages]
+pytest = "*"
+numpy = "*"
+pylint = "*"
+black = "*"
+
+[requires]

@@ -1,0 +1,49 @@
+###
+### A complete description of a Prefect Deployment for flow 'covid-prediction'
+###
+name: CovidPredictor_3
+description: null
+tags:
+- tag_CovidPrev_3
+schedule:
+  cron: 25 17 14 * *
+  timezone: Europe/Berlin
+parameters: {
+    "Prov_St": "Madrid",
+    "run_id": "16082a31f2be4eadb6f368b4ded2d309",
+}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command:
+  - python
+  - -m
+  - prefect.engine
+  stream_output: true
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: covid-prediction
+manifest_path: covid_prediction-manifest.json
+storage:
+  basepath: /home/ubuntu/mlops-zoomcamp/08-my_project/deployment
+  _is_anonymous: true
+  _block_document_name: anonymous-c969b376-8f10-4ce3-8e3c-8b70567ed280
+  _block_document_id: af1de1d6-327b-4718-8455-ce90dc452e33
+  _block_type_slug: local-file-system
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    Prov_St:
+      title: Prov_St
+      type: string
+    run_id:
+      title: run_id
+      type: string
+  required:
+  - Prov_St
+  - run_id
+  definitions: null

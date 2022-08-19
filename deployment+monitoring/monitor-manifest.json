@@ -1,0 +1,18 @@
+{
+    "flow_name": "monitor",
+    "import_path": "./covid_pred+monitor.py:monitor",
+    "parameter_openapi_schema": {
+        "title": "Parameters",
+        "type": "object",
+        "properties": {
+            "run_id": {
+                "title": "run_id",
+                "type": "string"
+            }
+        },
+        "required": [
+            "run_id"
+        ],
+        "definitions": null
+    }
+}

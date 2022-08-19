@@ -1,0 +1,46 @@
+###
+### A complete description of a Prefect Deployment for flow 'monitor'
+###
+name: CovidPredMonitor
+description: null
+tags:
+- tag_CovidPredMonitor
+schedule:
+  cron: 21 16 * * *
+  timezone: Europe/Berlin
+parameters: {
+    "run_id": "16082a31f2be4eadb6f368b4ded2d309",
+}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command:
+  - python
+  - -m
+  - prefect.engine
+  stream_output: true
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: monitor
+manifest_path: monitor-manifest.json
+storage:
+  bucket_path: prefect-cloud-flow-codes/covid_predictor
+  aws_access_key_id: null
+  aws_secret_access_key: null
+  _is_anonymous: true
+  _block_document_name: anonymous-ceba9112-8890-45c6-9070-05c0f8147285
+  _block_document_id: c0cf381f-c794-4549-88a3-b10304064518
+  _block_type_slug: s3
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    run_id:
+      title: run_id
+      type: string
+  required:
+  - run_id
+  definitions: null

@@ -1,0 +1,23 @@
+{
+    "flow_name": "covid-prediction",
+    "import_path": "./covid_pred+monitor.py:covid_prediction",
+    "parameter_openapi_schema": {
+        "title": "Parameters",
+        "type": "object",
+        "properties": {
+            "Prov_St": {
+                "title": "Prov_St",
+                "type": "string"
+            },
+            "run_id": {
+                "title": "run_id",
+                "type": "string"
+            }
+        },
+        "required": [
+            "Prov_St",
+            "run_id"
+        ],
+        "definitions": null
+    }
+}
