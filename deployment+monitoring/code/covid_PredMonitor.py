@@ -1,16 +1,23 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
+from datetime import timedelta, datetime, date
 from sklearn.metrics import mean_squared_error
 import pandas as pd
 import numpy as np
-from datetime import timedelta, datetime, date
 from pandas._libs.tslibs.timestamps import Timestamp
 import mlflow
 from prefect import task, flow, get_run_logger
 
-def preprocess(df,TARGETS=["ConfirmedCases", "Fatalities"],loc_group=['Province_State', 'Country_Region']):
+def preprocess(df,TARGETS=None,loc_group=None):
+    """
+    Preprocess the dataframe: filling NaNs, ...
+    """
+    if TARGETS is None:
+        TARGETS=["ConfirmedCases", "Fatalities"]
+    if loc_group is None:
+        loc_group=['Province_State', 'Country_Region']
+        
     df["Date"] = df["Date"].astype("datetime64[ms]")
     for col in loc_group:
         df[col].fillna("none", inplace=True) #NOTE: replace all NaN with none  
@@ -20,22 +27,33 @@ def preprocess(df,TARGETS=["ConfirmedCases", "Fatalities"],loc_group=['Province_
         df["prev_{}".format(col)] = df.groupby(loc_group)[col].shift() #NOTE: the prev_ columns basically has the same than the others but delayed one day
     return df
 
-def create_output(df, TARGETS=["ConfirmedCases", "Fatalities"]): #To have the same format as the original input
+def create_output(df, TARGETS=None): #To have the same format as the original input
+    """
+    Adds output columns to the dataframe with the same units as the original input
+    """
+    if TARGETS is None:
+        TARGETS=["ConfirmedCases", "Fatalities"]
+
     for col in TARGETS:
         df["pred_out_{}".format(col)] = np.expm1(df["pred_{}".format(col)])
     return  df
 
-def get_data_last_days(num_days): #gets the data from the last "num_days" days
-    num_days = num_days + 2 #I do this because I get rid of the first date since it has NaNs in the columns prev_ConfirmedCases	prev_Fatalities and because of the for loop with range
+def get_data_last_days(num_days):
+    """
+    Gets the data from the last "num_days" days
+    """
+    num_days = num_days + 2 #I do this because I get rid of the first date since it has NaNs in the columns prev_ConfirmedCases	prev_Fatalities and 
+                            #because of the for loop with range
     dfs = []  # empty list which will hold your dataframes
     for d in range(1, num_days): #NOTE: do the same that has been done for the first day but for the whole period
-        date = datetime.now() - timedelta(days=d)
-        date_str = date.strftime("%m-%d-%Y")
+        date_now = datetime.now() - timedelta(days=d)
+        date_str = date_now.strftime("%m-%d-%Y")
         source_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/' + date_str + '.csv'
         df_temp = pd.read_csv(source_url)
         df_temp.rename(columns={"Last_Update": "Date"}, inplace=True) #Renane dataframe column from "Last_Update" to "Date"
-        df_temp_2 = df_temp[["Admin2", "Province_State", "Country_Region","Confirmed", "Deaths"]].copy() #TODO: consider also other columns in future versions like Recovered,Active,Combined_Key,Incident_Rate,Case_Fatality_Ratio
-        df_temp_2.loc[:,"Date"] = date.strftime("%Y-%m-%d") 
+        df_temp_2 = df_temp[["Admin2", "Province_State", "Country_Region","Confirmed", "Deaths"]].copy() #TODO: consider also other columns in future versions 
+                                                                                                #like Recovered,Active,Combined_Key,Incident_Rate,Case_Fatality_Ratio
+        df_temp_2.loc[:,"Date"] = date_now.strftime("%Y-%m-%d") 
         dfs.append(df_temp_2)  # append dataframe to list
     res = pd.concat(dfs, ignore_index=True)  # concatenate list of dataframes
     
@@ -50,46 +68,76 @@ def get_data_last_days(num_days): #gets the data from the last "num_days" days
     return df
 
 @task
-def predict_today_Province_State(model,Province_State,df):
+def predict_today_province_state(model,province_state,df):
+    """
+    Predicts the cases for today for a given Province.
+    """
     y_pred = predict_today_world(model) #Predict today worldwide
-    index_PS = df[df['Province_State']==Province_State].iloc[0].name
-    predictions = y_pred[index_PS]
+    index_ps = df[df['Province_State']==province_state].iloc[0].name
+    predictions = y_pred[index_ps]
     return predictions #First the predicted Confirmed cases and second the predicted fatalities
 
-def predict_today_world(model,features=["prev_ConfirmedCases", "prev_Fatalities"]):#Does the prediction for today
+def predict_today_world(model,features=None):#Does the prediction for today
+    """
+    Predicts the cases for today for a the whole world.
+    """
+    if features is None:
+        features=["prev_ConfirmedCases", "prev_Fatalities"]   
     df = get_data_last_days(1) #Get data from yesterday
     yesterday = datetime.now() - timedelta(days=1)
     yesterday = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = Timestamp(yesterday)
-    y_pred = np.clip(model.predict(df.loc[df["Date"] == yesterday][features]), None, 16)#NOTE: here predicting the targets for the first day and saturating (clip) them with max=16
+    y_pred = np.clip(model.predict(df.loc[df["Date"] == yesterday][features]), None, 16)
+    #NOTE: here predicting the targets for the first day and saturating (clip) them with max=16
     return y_pred
 
 @task
 def evaluate_yesterday(model):
+    """
+    Evaluate the RMSE for the yesterday
+    """
     return evaluate_last_days(model,1)
 
 def rmse(y_true, y_pred):
+    """
+    Calculates the RMSE
+    """
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
-def predict_past(model, num_days,TARGETS=["ConfirmedCases", "Fatalities"],features=["prev_ConfirmedCases", "prev_Fatalities"]):
+def predict_past(model, num_days,TARGETS=None,features=None):
+    """
+    Makes predictions for the last "num_days" days.
+    """
+    if TARGETS is None:
+        TARGETS=["ConfirmedCases", "Fatalities"]
+    if features is None:
+        features=["prev_ConfirmedCases", "prev_Fatalities"] 
     test_df = get_data_last_days(num_days)
     first_day = datetime.now() - timedelta(days=num_days)
     first_day = first_day.replace(hour=0, minute=0, second=0, microsecond=0)
     first_day = Timestamp(first_day)
-    y_pred = np.clip(model.predict(test_df.loc[test_df["Date"] == first_day][features]), None, 16)#NOTE: here he is predicting the targets for the first day and saturating (clip) them with max=16
+    y_pred = np.clip(model.predict(test_df.loc[test_df["Date"] == first_day][features]), None, 16)
+    #NOTE: here he is predicting the targets for the first day and saturating (clip) them with max=16
+    
     for i, col in enumerate(TARGETS):
         test_df["pred_{}".format(col)] = 0
         test_df.loc[test_df["Date"] == first_day, "pred_{}".format(col)] = y_pred[:, i] #NOTE: here he sets the predicted column
     for d in range(1, num_days): #NOTE: do the same that has been done for the first day but for the whole period
         y_pred = np.clip(model.predict(y_pred), None, 16)
-        date = first_day + timedelta(days=d)
+        date_temp = first_day + timedelta(days=d)
         for i, col in enumerate(TARGETS):
-            test_df.loc[test_df["Date"] == date, "pred_{}".format(col)] = y_pred[:, i]
+            test_df.loc[test_df["Date"] == date_temp, "pred_{}".format(col)] = y_pred[:, i]
             
     test_df = create_output(test_df)
     return test_df
 
-def evaluate_last_days(model,num_days,TARGETS=["ConfirmedCases", "Fatalities"]):
+def evaluate_last_days(model,num_days,TARGETS=None):
+    """
+    Evaluate the RMSE for the last "num_days" days
+    """
+    if TARGETS is None:
+        TARGETS=["ConfirmedCases", "Fatalities"]
+        
     #get data from the last "num_days" days
     df = predict_past(model,num_days)
     
@@ -137,7 +185,7 @@ def covid_prediction(
     model = load_model(run_id)
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Applying the model...')
-    predictions = predict_today_Province_State(model,Prov_St,df) #Returns first the predicted Confirmed cases and second the predicted fatalities
+    predictions = predict_today_province_state(model,Prov_St,df) #Returns first the predicted Confirmed cases and second the predicted fatalities
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Saving the result to {output_file}...')
     df_result = pd.DataFrame()
@@ -161,13 +209,13 @@ def monitor(run_id: str):
     model = load_model(run_id)
     
     logger.info(f'>>>>>>>>>>>>>>>>>> Loading the model with RUN_ID={run_id}...')
-    rmse = evaluate_yesterday(model)
+    eval_rmse = evaluate_yesterday(model)
     
     logger.info(f'>>>>>>>>>>>>>>>>>> Saving the monitoring result to {output_file_monitoring}...')
     df_result_monitoring = pd.DataFrame()
     df_result_monitoring['Date'] =  pd.Series(date.today())
     df_result_monitoring['model_version'] = run_id
-    df_result_monitoring['RMSE'] = rmse
+    df_result_monitoring['RMSE'] = eval_rmse
     df_result_monitoring.to_csv(output_file_monitoring, index=False)
     
     logger.info(f'>>>>>>>>>>>>>>>>>> Finished succesfully!')    

@@ -10,11 +10,13 @@ numpy = "*"
 datetime = "*"
 mlflow = "*"
 prefect = "*"
+mistune = ">=2.0.3"
 
 [dev-packages]
 pytest = "*"
 numpy = "*"
 pylint = "*"
 black = "*"
+mistune = ">=2.0.3"
 
 [requires]

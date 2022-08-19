@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "64bf6f4285b36738792aa2b30e17119c9214849e6bd81886f151bab23a055c5f"
+            "sha256": "2184d5851ad94d85e7304f0ad8b72ce3366de74f795640c8b39f817a1db71682"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -709,6 +709,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==2.1.1"
+        },
+        "mistune": {
+            "hashes": [
+                "sha256:182cc5ee6f8ed1b807de6b7bb50155df7b66495412836b9a74c8fbdfc75fe36d",
+                "sha256:9ee0a66053e2267aba772c71e06891fa8f1af6d4b01d5e84e267b4570d4d9808"
+            ],
+            "index": "pypi",
+            "version": "==2.0.4"
         },
         "mlflow": {
             "hashes": [
@@ -1677,6 +1685,14 @@
             "markers": "python_version >= '3.6'",
             "version": "==0.7.0"
         },
+        "mistune": {
+            "hashes": [
+                "sha256:182cc5ee6f8ed1b807de6b7bb50155df7b66495412836b9a74c8fbdfc75fe36d",
+                "sha256:9ee0a66053e2267aba772c71e06891fa8f1af6d4b01d5e84e267b4570d4d9808"
+            ],
+            "index": "pypi",
+            "version": "==2.0.4"
+        },
         "mypy-extensions": {
             "hashes": [
                 "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d",
@@ -1794,7 +1810,7 @@
                 "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
                 "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
             ],
-            "markers": "python_version >= '3.7'",
+            "markers": "python_version < '3.11'",
             "version": "==2.0.1"
         },
         "tomlkit": {

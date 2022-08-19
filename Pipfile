@@ -11,9 +11,11 @@ boto3 = "*"
 pyarrow = "*"
 fastparquet = "*"
 prefect = "==2.b16"
+mistune = ">=2.0.3"
 
 [dev-packages]
 ipykernel = "*"
+mistune = ">=2.0.3"
 
 [requires]
 python_version = "3.10"
