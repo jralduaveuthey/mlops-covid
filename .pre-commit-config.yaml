@@ -32,7 +32,7 @@ repos:
       language: system
       types: [python]
       args: [
-        # "./deployment+monitoring/code", #run it only on the "code" folder
+        "deployment+monitoring/code", #run it only on the "code" folder
         "-rn", # Only display messages
         "-sn", # Don't display the score
         "--recursive=y"
