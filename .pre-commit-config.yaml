@@ -13,17 +13,17 @@ repos:
   hooks:
     - id: isort
       name: isort (python)
-      args: [
-        "./deployment+monitoring/code" #run it only on the "code" folder
-      ]
+    #   args: [
+    #     "./deployment+monitoring/code" #run it only on the "code" folder
+    #   ]
 - repo: https://github.com/psf/black
   rev: 22.6.0
   hooks:
     - id: black
       language_version: python3.9
-      args: [
-        "./deployment+monitoring/code" #run it only on the "code" folder
-      ]
+    #   args: [
+    #     "./deployment+monitoring/code" #run it only on the "code" folder
+    #   ]
 - repo: local
   hooks:
     - id: pylint
@@ -32,7 +32,7 @@ repos:
       language: system
       types: [python]
       args: [
-        "./deployment+monitoring/code", #run it only on the "code" folder
+        # "./deployment+monitoring/code", #run it only on the "code" folder
         "-rn", # Only display messages
         "-sn", # Don't display the score
         "--recursive=y"

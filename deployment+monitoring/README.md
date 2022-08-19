@@ -7,7 +7,7 @@ Also here I will apply best practices like:
 - Makefile
 - pre-commit hooks
 
-# Python Script 
+# Python Script
 Here I combine the flow from /deployment_PrefectRemoteAgent/covid_pred.py and the flow from/monitoring/covid_pred_monitor.py
 
 # Prefect Cloud
@@ -67,7 +67,7 @@ prefect deployment run covid-prediction/CovidPred
 ## Configure the EC2 instance
 To have an Agent in an EC2 instance as your execution layer follow the steps here https://discourse.prefect.io/t/how-to-deploy-a-prefect-2-0-agent-to-an-ec2-instance-as-your-execution-layer/551
 
-At the moment automating this part via Terraform only works for Prefect 1.0 https://discourse.prefect.io/t/announcing-the-terraform-module-to-deploy-the-prefect-docker-agent-on-aws-ec2/584 so this part unfortunately must be done manually. 
+At the moment automating this part via Terraform only works for Prefect 1.0 https://discourse.prefect.io/t/announcing-the-terraform-module-to-deploy-the-prefect-docker-agent-on-aws-ec2/584 so this part unfortunately must be done manually.
 
 ### Configue a work queue that can allocate your deployment's flow runs to agents AND Start an agent in your execution environment
 In the new created EC2 machine login into your Prefect Cloud
@@ -124,7 +124,7 @@ prefect deployment run monitor/CovidPredMonitor
 ## Configure the EC2 instance
 To have an Agent in an EC2 instance as your execution layer follow the steps here https://discourse.prefect.io/t/how-to-deploy-a-prefect-2-0-agent-to-an-ec2-instance-as-your-execution-layer/551
 
-At the moment automating this part via Terraform only works for Prefect 1.0 https://discourse.prefect.io/t/announcing-the-terraform-module-to-deploy-the-prefect-docker-agent-on-aws-ec2/584 so this part unfortunately must be done manually. 
+At the moment automating this part via Terraform only works for Prefect 1.0 https://discourse.prefect.io/t/announcing-the-terraform-module-to-deploy-the-prefect-docker-agent-on-aws-ec2/584 so this part unfortunately must be done manually.
 
 ### Configue a work queue that can allocate your deployment's flow runs to agents AND Start an agent in your execution environment
 In the new created EC2 machine login into your Prefect Cloud
@@ -143,3 +143,7 @@ prefect agent start -t tag_CovidPredMonitor
 # Testing
 See under /deployment+monitoring/code
 The file with the flows had to be renamed to covid_PredMonitor.py because pytest complained of the previous name.
+Setting VS Code as explained in the Module 6 one can see the unit test. No integration test yet.
+
+# Code quality
+Linting and formatting is done as in the module 6 with pylint, black and isort
