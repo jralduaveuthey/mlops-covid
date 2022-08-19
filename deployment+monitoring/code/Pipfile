@@ -11,6 +11,7 @@ datetime = "*"
 mlflow = "*"
 prefect = "*"
 mistune = ">=2.0.3"
+nbconvert = ">=6.3"
 
 [dev-packages]
 pytest = "*"
@@ -18,5 +19,7 @@ numpy = "*"
 pylint = "*"
 black = "*"
 mistune = ">=2.0.3"
+nbconvert = ">=6.3"
+isort = "*"
 
 [requires]

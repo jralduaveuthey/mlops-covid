@@ -5,26 +5,25 @@ import covid_PredMonitor
 
 
 def test_rmse():
-    x = np.random.randint(1,101,5)
-    y = np.random.randint(1,101,5)
+    x = np.random.randint(1, 101, 5)
+    y = np.random.randint(1, 101, 5)
     actual_result = covid_PredMonitor.rmse(x, y)
-    
-    summation = 0  #variable to store the summation of differences
-    n = len(y) #finding total number of items in list
-    for i in range (0,n):  #looping through each element of the list
-        difference = y[i] - x[i]  #finding the difference between observed and predicted value
-        squared_difference = difference**2  #taking square of the differene 
-        summation = summation + squared_difference  #taking a sum of all the differences
-    MSE = summation/n 
+
+    summation = 0  # variable to store the summation of differences
+    n = len(y)  # finding total number of items in list
+    for i in range(0, n):  # looping through each element of the list
+        difference = (
+            y[i] - x[i]
+        )  # finding the difference between observed and predicted value
+        squared_difference = difference**2  # taking square of the differene
+        summation = (
+            summation + squared_difference
+        )  # taking a sum of all the differences
+    MSE = summation / n
     expected_result = np.sqrt(MSE)
-    
+
     assert actual_result == expected_result
     # assert 1 == 1 #NOTE: dummy test
-
-
-
-
-
 
 
 # def read_text(file):
@@ -128,4 +127,4 @@ def test_rmse():
 #     }
 
 #     assert actual_predictions == expected_predictions
-    # assert 1 == 1 #NOTE: dummy test
+# assert 1 == 1 #NOTE: dummy test
