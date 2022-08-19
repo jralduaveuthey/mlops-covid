@@ -21,5 +21,6 @@ black = "*"
 mistune = ">=2.0.3"
 nbconvert = ">=6.3"
 isort = "*"
+pre-commit = "*"
 
 [requires]
