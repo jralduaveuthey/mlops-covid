@@ -2,7 +2,7 @@ name: CI-Tests
 on:
   pull_request:
     branches:
-      - 'develop'
+      - 'main'
 
 env:
   AWS_DEFAULT_REGION: 'eu-central-1'
