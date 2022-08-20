@@ -15,4 +15,4 @@ jobs:
   dummy:
     name: dummy job
         run: |
-           'Hello World'
+          echo 'Hello World'
