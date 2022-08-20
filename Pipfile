@@ -17,7 +17,6 @@ numpy = "*"
 nbconvert = ">=6.3"
 prefect = "==2.1.1"
 konsole = "*"
-mistune = "*"
 
 [dev-packages]
 numpy = "*"
