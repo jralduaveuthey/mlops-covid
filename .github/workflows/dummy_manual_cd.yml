@@ -1,4 +1,4 @@
-name: CD-Create Deployments
+name: Dummy CD-Create Deployments
 on:
   push:
     branches:
