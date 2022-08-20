@@ -24,7 +24,7 @@ jobs:
 
       - name: Run Unit tests
         working-directory: "."
-        run: pipenv run pytest delivery
+        run: pipenv run pytest testing
 
       - name: Lint
         working-directory: "."
