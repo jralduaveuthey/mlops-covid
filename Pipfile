@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-mlflow = "*"
 jupyter = "*"
+mlflow = "*"
 astroid = "*"
 boto3 = "*"
 pyarrow = "*"
