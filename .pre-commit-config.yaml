@@ -13,17 +13,16 @@ repos:
   hooks:
     - id: isort
       name: isort (python)
-      files: ^deployment+monitoring/code/
-    #   args: [
-    #     "deployment+monitoring/code" #run it only on the "code" folder
-    #   ]
+      args: [
+        "testing" #run it only on the "testing" folder
+      ]
 - repo: https://github.com/psf/black
   rev: 22.6.0
   hooks:
     - id: black
       language_version: python3.9
       args: [
-        "deployment+monitoring/code" #run it only on the "code" folder
+        "testing" #run it only on the "testing" folder
       ]
 - repo: local
   hooks:
@@ -33,7 +32,7 @@ repos:
       language: system
       types: [python]
       args: [
-        "deployment+monitoring/code", #run it only on the "code" folder
+        "testing", #run it only on the "testing" folder
         "-rn", # Only display messages
         "-sn", # Don't display the score
         "--recursive=y"
@@ -42,10 +41,10 @@ repos:
   hooks:
     - id: pytest-check
       name: pytest-check
-      entry: pytest
+      entry: pipenv run pytest
       language: system
       pass_filenames: false
       always_run: true
       args: [
-        "deployment+monitoring/code/tests"
+        "testing"
       ]
