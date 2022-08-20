@@ -5,7 +5,9 @@ Note: There is a README.md file in each folder with instructions.
 
 
 # Init
+```
 /mlops-covid$ pip install pipenv && pipenv install --dev
+```
 
 # Explanation of the folders and files in order
 1) /EDA: here some basic EDA takes place on the covid dataset
