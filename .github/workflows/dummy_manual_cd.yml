@@ -1,8 +1,9 @@
 name: Dummy CD-Create Deployments
 on:
-  push:
-    branches:
-      - 'develop'
+  workflow_dispatch:
+#   push:
+#     branches:
+#       - 'develop'
 
 
 jobs:
