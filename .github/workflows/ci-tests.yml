@@ -14,5 +14,4 @@ env:
 jobs:
   dummy:
     name: dummy job
-        run: |
-          echo 'Hello World'
+        run: echo 'Hello World'
