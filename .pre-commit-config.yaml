@@ -20,6 +20,7 @@ repos:
   rev: 22.6.0
   hooks:
     - id: black
+      entry: pipenv run black
       language_version: python3.9
       args: [
         "testing" #run it only on the "testing" folder
@@ -28,7 +29,7 @@ repos:
   hooks:
     - id: pylint
       name: pylint
-      entry: pylint
+      entry: pipenv run pylint
       language: system
       types: [python]
       args: [
