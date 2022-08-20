@@ -8,11 +8,9 @@ on:
 
 env:
   AWS_DEFAULT_REGION: 'eu-central-1'
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   
 jobs:
-  build-push-deploy:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -20,14 +18,63 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID}} 
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}} 
+          aws-region: ${{ env.AWS_DEFAULT_REGION}} 
 
-
-      # Create Deployment Predicting
+  deploy-predicting: # Create Deployment Predicting
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - name: Create Deployment Predicting
         id: deployment-predicting
         working-directory: 'delivery'
         run: |
-          echo "Hello World"
+          echo "Login in in Prefect Cloud..."
+          prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
+          prefect cloud workspace set --workspace ${{ secrets.PREFECT_WS}} 
+          echo "Create Prefect Deployment..."
+          prefect deployment build ./covid_PredMonitor.py:covid_prediction -n CovidPredictor -t tag_CovidPredictor --storage-block s3/${{ secrets.PREFECT_S3BLOCK_NAME}}
+          FILE='./deployment.yaml'
+          if [ -e "$FILE" ]; then
+              echo "File $FILE exists."
+              file_temp=$FILE
+              deployment_prefix='covid-prediction'
+          else
+              echo "File $FILE does not exist."
+              file_temp='./covid_prediction-deployment.yaml'
+              deployment_prefix='covid_prediction'
+          fi
+          example_parameters='parameters: { "Prov_St": "Berlin", "run_id": "16082a31f2be4eadb6f368b4ded2d309"}'
+          sed -i "s/^parameters: {}/${example_parameters}/" $file_temp
+          mv $file_temp predicting.yaml
+          prefect deployment apply predicting.yaml
+          
+  deploy-monitoring: # Create Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Create Deployment Monitoring
+        id: deployment-monitoring
+        working-directory: 'delivery'
+        run: |
+          echo "Login in in Prefect Cloud"
+          prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
+          prefect cloud workspace set --workspace ${{ secrets.PREFECT_WS}} 
+          echo "Create Prefect Deployment"
+          prefect deployment build ./covid_PredMonitor.py:monitor -n CovidPredMonitor -t tag_CovidPredMonitor --storage-block s3/
+          {{ secrets.PREFECT_S3BLOCK_NAME}}
+          FILE='./deployment.yaml'
+          if [ -e "$FILE" ]; then
+              echo "File $FILE exists."
+              file_temp=$FILE
+              deployment_prefix='covid-prediction'
+          else
+              echo "File $FILE does not exist."
+              file_temp='./monitor-deployment.yaml'
+              deployment_prefix='monitor'
+          fi
+          example_parameters='parameters: { "run_id": "16082a31f2be4eadb6f368b4ded2d309"}'
+          sed -i "s/^parameters: {}/${example_parameters}/" $file_temp
+          mv $file_temp monitoring.yaml
+          prefect deployment apply monitoring.yaml
