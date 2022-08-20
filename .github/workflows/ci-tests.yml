@@ -25,21 +25,21 @@ jobs:
         with:
           python-version: 3.10.4
 
-      - name: Install dependencies
-        working-directory: "."
-        run: pip install pipenv && pipenv install --dev
+      # - name: Install dependencies
+      #   working-directory: "."
+      #   run: pip install pipenv && pipenv install --dev
 
-      - name: Run Unit tests
-        working-directory: "delivery"
-        run: pipenv run pytest .
+      # - name: Run Unit tests
+      #   working-directory: "delivery"
+      #   run: pipenv run pytest .
 
-      - name: Lint
-        working-directory: "delivery"
-        run: pipenv run pylint --recursive=y .
+      # - name: Lint
+      #   working-directory: "delivery"
+      #   run: pipenv run pylint --recursive=y .
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_DEFAULT_REGION }}
