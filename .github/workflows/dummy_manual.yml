@@ -1,5 +1,5 @@
 
-name: CI-Tests
+name: Dummy manual
 on:
   workflow_dispatch:
 
