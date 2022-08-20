@@ -10,6 +10,7 @@ The order is the following:
 4) deployment_PrefectRemoteAgent
 5) monitoring
 6) deployment+monitoring
+7) testing
 
 see more info in CU task https://app.clickup.com/t/2u9yn99
 
