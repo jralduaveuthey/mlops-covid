@@ -1,11 +1,5 @@
 # Goal of this folder
 Here I am to join the flows for the batch prediction process and the monitoring in one script.
-Also here I will apply best practices like:
-- unit tests
-- integration test
-- Linter and/or code formatter
-- Makefile
-- pre-commit hooks
 
 # Python Script
 Here I combine the flow from /deployment_PrefectRemoteAgent/covid_pred.py and the flow from/monitoring/covid_pred_monitor.py
@@ -139,11 +133,3 @@ and run:
 ```
 prefect agent start -t tag_CovidPredMonitor
 ```
-
-# Testing
-See under /deployment+monitoring/code
-The file with the flows had to be renamed to covid_PredMonitor.py because pytest complained of the previous name.
-Setting VS Code as explained in the Module 6 one can see the unit test. No integration test yet.
-
-# Code quality
-Linting and formatting is done as in the module 6 with pylint, black and isort

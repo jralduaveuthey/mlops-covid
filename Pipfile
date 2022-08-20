@@ -17,6 +17,7 @@ numpy = "*"
 mistune = "*"
 nbconvert = ">=6.3"
 prefect = "==2.1.1"
+konsole = "*"
 
 [dev-packages]
 mistune = "*"
