@@ -8,6 +8,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: 'eu-central-1'
+  PREFECT_VERSION: 2.1
   
 jobs:
   setup:
