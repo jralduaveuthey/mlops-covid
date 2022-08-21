@@ -28,8 +28,9 @@ jobs:
     steps:
       - name: Create Deployment Predicting
         id: deployment-predicting
-        working-directory: 'delivery'
+        working-directory: '.'
         run: |
+          cd delivery/
           echo "Login in in Prefect Cloud..."
           pipenv run prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
           echo "SO FAR SO GOOD..."
