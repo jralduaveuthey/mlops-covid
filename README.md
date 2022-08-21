@@ -3,6 +3,8 @@ My capstone project for the MLOps Zoomcamp
 
 Note: There is a README.md file in each folder with instructions.
 
+# Prerequisite 
+You need to have installed aws cli in your machine. See [here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) for more details.
 
 # Init
 ```
