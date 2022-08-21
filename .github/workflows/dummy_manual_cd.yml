@@ -34,16 +34,27 @@ jobs:
         with:
           python-version: 3.10.4
           
-      - name: Install dependencies
-        working-directory: "."
-        run: pip install pipenv && pipenv install --dev
-    
-      - name: Create Deployment Predicting
-        id: deployment-predicting
-        working-directory: '.'
+      - name: Python dependencies
         run: |
-          cd delivery/
-          echo "Login in in Prefect Cloud..."
-          prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
-          echo "SO FAR SO GOOD..."
+          pip install prefect==$PREFECT_VERSION
+          pip install s3fs
+          pip install .
+
+      - name: Prefect Cloud login
+        run: |
+          prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY}} 
+          prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL}}
+          
+      - name: Create Prefect Deployment
+        run: |    
+          prefect deployment build ./covid_PredMonitor.py:covid_prediction -n CovidPredictor -t tag_CovidPredictor --storage-block s3/$PREFECT_S3BLOCK_NAME
+    
+#       - name: Create Deployment Predicting
+#         id: deployment-predicting
+#         working-directory: '.'
+#         run: |
+#           cd delivery/
+#           echo "Login in in Prefect Cloud..."
+#           prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
+#           echo "SO FAR SO GOOD..."
         
