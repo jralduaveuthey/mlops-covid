@@ -39,7 +39,8 @@ jobs:
         run: |
           pip install prefect==$PREFECT_VERSION
           pip install s3fs
-          pip install .
+          pip install sqlalchemy
+          pip install pandas
 
       - name: Prefect Cloud login
         run: |
