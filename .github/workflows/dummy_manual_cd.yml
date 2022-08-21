@@ -9,6 +9,7 @@ on:
 env:
   AWS_DEFAULT_REGION: 'eu-central-1'
   PREFECT_VERSION: 2.1
+  PREFECT_S3BLOCK_NAME: 'covid-predictor'
   
 jobs:
   setup:
@@ -49,7 +50,7 @@ jobs:
           
       - name: Create Prefect Deployment
         run: |    
-          prefect deployment build ./covid_PredMonitor.py:covid_prediction -n CovidPredictor -t tag_CovidPredictor --storage-block s3/$PREFECT_S3BLOCK_NAME
+          prefect deployment build delivery/covid_PredMonitor.py:covid_prediction -n CovidPredictor -t tag_CovidPredictor --storage-block s3/$PREFECT_S3BLOCK_NAME
     
 #       - name: Create Deployment Predicting
 #         id: deployment-predicting
