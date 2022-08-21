@@ -22,6 +22,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}} 
           aws-region: ${{ env.AWS_DEFAULT_REGION}} 
           
+
+
+  deploy-predicting: # Create Deployment Predicting
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.10
         uses: actions/setup-python@v2
@@ -31,11 +37,7 @@ jobs:
       - name: Install dependencies
         working-directory: "."
         run: pip install pipenv && pipenv install --dev
-
-  deploy-predicting: # Create Deployment Predicting
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
+    
       - name: Create Deployment Predicting
         id: deployment-predicting
         working-directory: '.'
