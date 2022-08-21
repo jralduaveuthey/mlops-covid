@@ -31,6 +31,6 @@ jobs:
         working-directory: 'delivery'
         run: |
           echo "Login in in Prefect Cloud..."
-          prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
+          pipenv run prefect cloud login -k ${{ secrets.PREFECT_API_KEY}} 
           echo "SO FAR SO GOOD..."
         
