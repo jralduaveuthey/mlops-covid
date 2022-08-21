@@ -42,6 +42,10 @@ jobs:
           pip install s3fs
           pip install sqlalchemy
           pip install pandas
+          pip install mlflow
+          pip install numpy
+          pip install sklearn
+          pip install datetime
 
       - name: Prefect Cloud login
         run: |
