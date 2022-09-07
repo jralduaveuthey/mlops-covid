@@ -1,5 +1,9 @@
 # mlops-covid
 My capstone project for the MLOps Zoomcamp
+The project consists on implementing the MLOps environment for a COVID Predictor. Examples of predictions are:
+- Predict the cases for today for a given location
+- Predict the cases for following days for the whole world.
+...
 
 Note: There is a README.md file in each folder with instructions.
 
