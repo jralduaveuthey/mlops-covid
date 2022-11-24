@@ -1,0 +1,3 @@
+- This is is to follow the tutorial to dockerize MLflow.
+- This is part of the CU-Task https://app.clickup.com/t/34aghxe
+- The original repo where most of the files in this folder come from is this: https://github.com/aws-samples/amazon-sagemaker-mlflow-fargate
