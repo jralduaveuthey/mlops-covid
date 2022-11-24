@@ -3,9 +3,31 @@ My capstone project for the MLOps Zoomcamp
 The project consists on implementing the MLOps environment for a COVID Predictor. Examples of predictions are:
 - Predict the cases for today for a given location
 - Predict the cases for following days for the whole world.
-...
+- ...
+
+# Problem description
+- The goal will be predicting the cumulative number of confirmed COVID19 cases in various locations across the world, as well as the number of resulting fatalities, for future dates. 
+- The input data is available here rom the Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE).
+- The problem is inspired by the Kaggle competition https://www.kaggle.com/competitions/covid19-global-forecasting-week-2
 
 Note: There is a README.md file in each folder with instructions.
+
+# Solution description for V1: 
+- Experiment tracking and model registry:
+    - Experiment tracking with MLflow: several items will be tracked:
+        - Parameters used in the models like the maximal degree of the polynomial features, ...
+        - Metric: the main metric will be root mean squared logarithmic error (RMSLE)
+        - Artifacts: here mainly we will work with pickled models for the different models tested
+        - Source will not be tracked
+    - Model management and Model registry with MLflow:  for model versioning, stage transitions,... and mainly to have a model in production that will be used in the pipeline
+
+- Workflow orchestration
+    - The workflow will be orchestrated using Prefect
+
+- Model monitoring
+    - The model monitoring will consist in the supervision of the RMSLE also with Prefect
+
+For more details see the section below "Explanation of the folders and files in order"
 
 # Prerequisite 
 You need to have installed aws cli in your machine. See [here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) for more details.
@@ -29,3 +51,8 @@ You need to have installed aws cli in your machine. See [here](https://docs.aws.
 
 # Reproduce
 You can choose to reproduce all the steps of the process following the READMEs on the previously mentioned folders or just focus on the folder /delivery for the end result.
+
+# Github Versions for different Versions of the project
+- Project V1 - CU Task: 2u9yn99 - Github sha: TBD
+- Project V2 - CU Task: 34aghxe - Github sha: TBD
+
