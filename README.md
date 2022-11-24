@@ -53,6 +53,6 @@ You need to have installed aws cli in your machine. See [here](https://docs.aws.
 You can choose to reproduce all the steps of the process following the READMEs on the previously mentioned folders or just focus on the folder /delivery for the end result.
 
 # Github Versions for different Versions of the project
-- Project V1 - CU Task: 2u9yn99 - Github sha: TBD
+- Project V1 - CU Task: 2u9yn99 - Github sha: 3a7197265fad1212399b61dac5219e5cf5a84874
 - Project V2 - CU Task: 34aghxe - Github sha: TBD
 
