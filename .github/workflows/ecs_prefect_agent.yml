@@ -48,7 +48,10 @@ jobs:
       - name: Checkout code from master branch
         uses: actions/checkout@v2
 
-      # Configure AWS Credential
+      #TODO: add this Markdown Summary
+      # - name: Generate Markdown Summary
+      #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -57,15 +60,8 @@ jobs:
           aws-region: ${{  env.AWS_REGION }}
 
 
-      # - name: Generate Markdown Summary
-      #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ env.AWS_REGION }}
-      #     mask-aws-account-id: 'no'
+
+
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
