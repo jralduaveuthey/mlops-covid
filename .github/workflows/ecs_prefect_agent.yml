@@ -41,7 +41,7 @@ env:
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
 
-jobs: #TODO: uncomment all the jobs for the final version
+jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "needs"
   # create-s3-bucket:
   #   runs-on: ubuntu-latest
   #   steps:
@@ -68,7 +68,7 @@ jobs: #TODO: uncomment all the jobs for the final version
   ecr-repo:
     name: ECR Repo & Image
     runs-on: ubuntu-latest
-    needs: create-s3-bucket
+    # needs: create-s3-bucket
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
