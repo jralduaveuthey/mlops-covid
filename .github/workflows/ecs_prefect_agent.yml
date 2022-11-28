@@ -41,29 +41,29 @@ env:
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
 
-jobs:
-  create-s3-bucket:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code from master branch
-        uses: actions/checkout@v2
+jobs: #TODO: uncomment all the jobs for the final version
+  # create-s3-bucket:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code from master branch
+  #       uses: actions/checkout@v2
 
-      #TODO: add this Markdown Summary
-      # - name: Generate Markdown Summary
-      #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{  env.AWS_REGION }}
-      # Deploy to AWS CloudFormation
-      - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: s3-stack
-          template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
-          no-fail-on-empty-changeset: "1"
+  #     #TODO: add this Markdown Summary
+  #     # - name: Generate Markdown Summary
+  #     #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{  env.AWS_REGION }}
+  #     # Deploy to AWS CloudFormation
+  #     - name: Deploy to AWS CloudFormation
+  #       uses: aws-actions/aws-cloudformation-github-deploy@v1
+  #       with:
+  #         name: s3-stack
+  #         template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
+  #         no-fail-on-empty-changeset: "1"
 
   ecr-repo:
     name: ECR Repo & Image
