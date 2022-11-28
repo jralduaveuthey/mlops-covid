@@ -51,17 +51,12 @@ jobs:
       #TODO: add this Markdown Summary
       # - name: Generate Markdown Summary
       #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{  env.AWS_REGION }}
-
-
-
-
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
@@ -111,7 +106,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           export IMAGE="$ECR_REGISTRY/$PROJECT:$IMAGE_TAG"
-          docker build -t $IMAGE .\deployment_PrefectFargate
+          docker build -t $IMAGE ./deployment_PrefectFargate
           docker push $IMAGE
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
