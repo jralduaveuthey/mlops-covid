@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The CloudFormation template for the CodePipeline.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod #TODO: have this consistent with the other cf templates and with the Github actions 
+
+Resources:
+    S3Bucket:
+        Type: AWS::S3::Bucket
+        Properties: 
+            BucketName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId']]
+
+Outputs:
+    BucketName:
+        Value: !Ref 'S3Bucket'
