@@ -26,7 +26,7 @@ on:
       prefect-version:
         description: Prefect version for flows
         required: true
-        default: '2.*'
+        default: '2.6.9'
         type: string
       aws-region:
         description: AWS Region
@@ -45,15 +45,27 @@ jobs:
   create-s3-bucket:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate Markdown Summary
-        run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
-      - name: Configure AWS credentials
+      - name: Checkout code from master branch
+        uses: actions/checkout@v2
+
+      # Configure AWS Credential
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mask-aws-account-id: 'no'
+          aws-region: ${{  env.AWS_REGION }}
+
+
+      # - name: Generate Markdown Summary
+      #   run: echo "Creating S3-Bucket with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     mask-aws-account-id: 'no'
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
@@ -139,7 +151,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: ${{ env.PROJECT }}
-          template: infrastructure/ecs_cluster_prefect_agent.yml
+          template: deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: "cpu=${{ github.event.inputs.cpu }},memory=${{ github.event.inputs.memory }},project=${{ env.PROJECT }},cluster=${{ env.ECS_CLUSTER }},image=${{ needs.ecr-repo.outputs.image }},awsaccountid=${{steps.aws.outputs.accountid}},region=${{ env.AWS_REGION }}"
 
