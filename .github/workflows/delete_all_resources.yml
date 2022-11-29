@@ -1,0 +1,52 @@
+name: 111 DELETE ECS Cluster, Prefect agent ECS service and ECR repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws-region:
+        description: AWS Region
+        required: true
+        default: 'eu-central-1'
+        type: string
+      cu_task_id:
+        description: CU Task ID (For the name of the Prefect blocks, ...)
+        required: true
+        default: '34aghxe'
+
+
+env:
+  CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
+  PROJECT: ${{ github.event.inputs.cu_task_id }}-prj
+  ECR_REPO: ${{ github.event.inputs.cu_task_id }}-ecr
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
+  ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs 
+
+jobs:
+  delete-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete ECR repository
+        continue-on-error: true
+        run: |
+          aws ecr delete-repository --repository-name ${{ env.ECR_REPO }} --force
+          aws cloudformation delete-stack --stack-name "ecr-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecr-stack-${{ env.CU_TASK_ID }}"
+
+      - name: Delete ECS agent service
+        continue-on-error: true
+        run: |
+          aws cloudformation delete-stack --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
+
+      - name: All AWS resources deleted
+        run: echo '### All AWS resources deleted! :tada:' >> $GITHUB_STEP_SUMMARY
