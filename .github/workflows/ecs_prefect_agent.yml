@@ -20,7 +20,7 @@ on:
         required: true
         default: 'prefect-141507290110/prod'
       cu_task_id:
-        description: CU Task ID (Name of the S3 and ECS blocks)
+        description: CU Task ID (For the name of the Prefect blocks, ...)
         required: true
         default: '34aghxe'
       prefect-version:
@@ -44,6 +44,7 @@ env:
 
 jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "needs"
   create-s3-bucket:
+    name: Create S3 Bucket
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code from master branch
@@ -60,8 +61,8 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           aws-region: ${{  env.AWS_REGION }}
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
-        # env: #NOTE: CU_TASK_ID unnecessary here cause it is already in the env of the whole template 
-        #   CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
+        env: #NOTE: CU_TASK_ID unnecessary here cause it is already in the env of the whole template 
+          CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: s3-stack
