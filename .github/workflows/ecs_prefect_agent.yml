@@ -35,10 +35,10 @@ on:
         type: string
 
 env:
-  ECS_CLUSTER: $ecs-{{ github.event.inputs.cu_task_id }}
   CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
-  PROJECT: $prj-{{ github.event.inputs.cu_task_id }}
-  BLOCK: $blk-{{ github.event.inputs.cu_task_id }}
+  ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs
+  PROJECT: ${{ github.event.inputs.cu_task_id }}-prk
+  BLOCK: ${{ github.event.inputs.cu_task_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
 
