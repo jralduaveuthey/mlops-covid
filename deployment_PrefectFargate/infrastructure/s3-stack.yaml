@@ -10,7 +10,7 @@ Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
         Properties: 
-            BucketName: !Join ['-', [!Ref CUTaskID, !Ref 'AWS::AccountId']]
+            BucketName: !Join ['-', ['s3', !Ref CUTaskID, !Ref 'AWS::AccountId']]
 
 Outputs:
     BucketName:

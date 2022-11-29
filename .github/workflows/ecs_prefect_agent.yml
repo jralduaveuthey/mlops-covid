@@ -67,7 +67,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
         with:
           name: s3-stack
           template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
-          parameter-overrides: "CUTaskID=$s3-{{ env.CU_TASK_ID }}"
+          parameter-overrides: "CUTaskID=${{ env.CU_TASK_ID }}"
           no-fail-on-empty-changeset: "1"
 
   ecr-repo:
