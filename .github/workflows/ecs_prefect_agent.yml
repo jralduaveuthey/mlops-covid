@@ -256,68 +256,71 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
         working-directory: ./deployment_PrefectFargate
         id: covid_pred
         run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --interval 120
+        #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
 
-  list-flows:
-    name: List Prefect flows
-    runs-on: ubuntu-latest
-    needs: blocks
-    outputs:
-      prefect_flows: ${{ steps.set-matrix.outputs.prefect_flows }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - id: set-matrix
-        working-directory: ./deployment_PrefectFargate
-        run: echo "prefect_flows=$(ls flows/*.py | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
-  deploy:
-    name: Deploy
-    needs: list-flows
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        flows: ${{ fromJson(needs.list-flows.outputs.prefect_flows) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+#NOTE: I comment "list-flows" and "deploy" because (as explained in Anna's tutorial linked in my CUTask 34aghxe) these are deployments with the configured to run directly in the agent's local process, i.e. in the same container as your Prefect agent. And initially I do not need that
+#   list-flows:
+#     name: List Prefect flows
+#     runs-on: ubuntu-latest
+#     needs: blocks
+#     outputs:
+#       prefect_flows: ${{ steps.set-matrix.outputs.prefect_flows }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - id: set-matrix
+#         working-directory: ./deployment_PrefectFargate
+#         run: echo "prefect_flows=$(ls flows/*.py | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
+#   deploy:
+#     name: Deploy
+#     needs: list-flows
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         flows: ${{ fromJson(needs.list-flows.outputs.prefect_flows) }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
 
-      - name: Python dependencies
-        working-directory: ./deployment_PrefectFargate
-        run: |
-          pip install prefect==$PREFECT_VERSION
-          pip install .
+#       - name: Set up Python 3.9
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.9
 
-      - name: Prefect Cloud login
-        working-directory: ./deployment_PrefectFargate
-        run: |
-          prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }} 
-          prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}
+#       - name: Python dependencies
+#         working-directory: ./deployment_PrefectFargate
+#         run: |
+#           pip install prefect==$PREFECT_VERSION
+#           pip install .
 
-      - name: AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mask-aws-account-id: 'no'
+#       - name: Prefect Cloud login
+#         working-directory: ./deployment_PrefectFargate
+#         run: |
+#           prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }} 
+#           prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}
 
-      - name: Deploy flows to S3
-        working-directory: ./deployment_PrefectFargate
-        id: build
-        run: |
-          FLOW_NAME=$(basename ${{ matrix.flows }} .py)
-          prefect deployment build ${{ matrix.flows }}:$FLOW_NAME -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t $PROJECT -n $PROJECT -o $FLOW_NAME.yaml -ib ecs-task/$BLOCK --skip-upload
-          prefect deployment build ${{ matrix.flows }}:$FLOW_NAME -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t $PROJECT -n $PROJECT-local --skip-upload
-          echo "flow_manifest=$FLOW_NAME.yaml" >> $GITHUB_OUTPUT
-#          echo ::set-output name=flow_manifest::$FLOW_NAME.yaml
+#       - name: AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+#           mask-aws-account-id: 'no'
 
-      - name: Upload YAML deployment manifest as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Deployment YAML manifests
-          path: ${{ steps.build.outputs.flow_manifest }}
+#       - name: Deploy flows to S3
+#         working-directory: ./deployment_PrefectFargate
+#         id: build
+#         run: |
+#           FLOW_NAME=$(basename ${{ matrix.flows }} .py)
+#           prefect deployment build ${{ matrix.flows }}:$FLOW_NAME -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t $PROJECT -n $PROJECT -o $FLOW_NAME.yaml -ib ecs-task/$BLOCK --skip-upload
+#           prefect deployment build ${{ matrix.flows }}:$FLOW_NAME -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t $PROJECT -n $PROJECT-local --skip-upload
+#           echo "flow_manifest=$FLOW_NAME.yaml" >> $GITHUB_OUTPUT
+# #          echo ::set-output name=flow_manifest::$FLOW_NAME.yaml
+
+#       - name: Upload YAML deployment manifest as artifact
+#         uses: actions/upload-artifact@v3
+#         with:
+#           name: Deployment YAML manifests
+#           path: ${{ steps.build.outputs.flow_manifest }}
