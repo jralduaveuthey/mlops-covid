@@ -37,6 +37,8 @@ on:
 env:
   CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
   ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs #NOTE: here I add suffixes and not prefixes cause otherwise Error: 1 validation error detected
+  ECR_REPO: ${{ github.event.inputs.cu_task_id }}-ecr
+  S3_BUCKET: ${{ github.event.inputs.cu_task_id }}-s3
   PROJECT: ${{ github.event.inputs.cu_task_id }}-prj
   BLOCK: ${{ github.event.inputs.cu_task_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
@@ -67,7 +69,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
         with:
           name: "s3-stack-${{ env.CU_TASK_ID }}"
           template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
-          parameter-overrides: "CUTaskID=${{ env.CU_TASK_ID }}"
+          parameter-overrides: "S3BUCKET=${{ env.S3_BUCKET }}"
           no-fail-on-empty-changeset: "1"
 
   ecr-repo:
@@ -94,7 +96,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
         with:
           name: "ecr-stack-${{ env.CU_TASK_ID }}"
           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
-          parameter-overrides: "CUTaskID=${{ env.CU_TASK_ID }}"
+          parameter-overrides: "ECRREPO=${{ env.ECR_REPO }}"
           no-fail-on-empty-changeset: "1"
 
       - name: Flow deployment finished
@@ -111,7 +113,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          export IMAGE="$ECR_REGISTRY/$PROJECT:$IMAGE_TAG"
+          export IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "image=$IMAGE" >> $GITHUB_OUTPUT

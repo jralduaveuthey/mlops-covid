@@ -4,11 +4,14 @@ Parameters:
   CUTaskID:
     Type: String
     Default: cutaskid
+  ECRREPO:
+    Type: String
+    Default: cutaskid   
 Resources:
   ECRRepo:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Join ['-', ['ecr', !Ref CUTaskID, !Ref 'AWS::AccountId']]
+      RepositoryName: !Ref ECRREPO
       LifecyclePolicy:
         LifecyclePolicyText: >
           {

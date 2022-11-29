@@ -2,15 +2,15 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: The CloudFormation template for the S3.
 
 Parameters:
-  CUTaskID:
+  S3BUCKET:
     Type: String
-    Default: cutaskid #TODO: have this consistent with the other cf templates and with the Github actions 
+    Default: s3bucket #TODO: have this consistent with the other cf templates and with the Github actions 
 
 Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
         Properties: 
-            BucketName: !Join ['-', ['s3', !Ref CUTaskID, !Ref 'AWS::AccountId']]
+            BucketName: !Ref S3BUCKET
 
 Outputs:
     BucketName:
