@@ -23,15 +23,35 @@ on:
         description: CU Task ID (For the name of the Prefect blocks, ...)
         required: true
         default: '34aghxe'
+      aws-region:
+        description: AWS Region
+        required: true
+        default: 'eu-central-1'
+        type: string
       prefect-version:
         description: Prefect version for flows
         required: true
         default: '2.6.9'
         type: string
-      aws-region:
-        description: AWS Region
+      prov_st:
+        description: City where you want to predict the covid cases
         required: true
-        default: 'eu-central-1'
+        default: 'Madrid'
+        type: string
+      run_id:
+        description: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/
+        required: true
+        default: '16082a31f2be4eadb6f368b4ded2d309'
+        type: string
+      cron_sch:
+        description: cron schedule to use in the deployment
+        required: true
+        default: '20 12 * * *' #“At 12:20.” every day
+        type: string
+      timezone:
+        description: timezone to use in the cron schedule 
+        required: true
+        default: 'Europe/Berlin'
         type: string
 
 env:
@@ -43,6 +63,11 @@ env:
   BLOCK: ${{ github.event.inputs.cu_task_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
+  PROV_ST: ${{ github.event.inputs.prov_st }}
+  RUN_ID: ${{ github.event.inputs.run_id }}
+  CRON_SCH: ${{ github.event.inputs.cron_sch }}
+  TIMEZONE: ${{ github.event.inputs.timezone }}
+  
 
 jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "needs"
   create-s3-bucket:
@@ -254,8 +279,8 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
 
       - name: Upload to S3 - covid_pred.py flow #TODO: delete everything under utilities/ that I do not need in my final version
         working-directory: ./deployment_PrefectFargate
-        id: covid_pred
-        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --interval 120
+        id: covid_pred #TODO: here use cron and timezone instead of interval
+        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --interval 120 #--cron=$CRON_SCH --timezone=$TIMEZONE
         #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
 
 
