@@ -15,10 +15,10 @@ on:
         default: '1024'
         type: choice
         options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
-      s3_path:
-        description: S3 path in the format bucket/path
-        required: true
-        default: 'prefect-141507290110/prod'
+      # s3_path: #TODO: delete this
+      #   description: S3 path in the format bucket/path
+      #   required: true
+      #   default: 'prefect-141507290110/prod'
       cu_task_id:
         description: CU Task ID (For the name of the Prefect blocks, ...)
         required: true
@@ -218,7 +218,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           
           id_ = "${{ secrets.AWS_ACCESS_KEY_ID }}"
           key_ = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          path_ = "${{ github.event.inputs.s3_path }}"
+          s3path_ = "${{ env.S3_BUCKET }}" 
           img_ = "${{ needs.ecr-repo.outputs.image }}"
           block_ = "$BLOCK"
           cluster_ = "${{ env.ECS_CLUSTER }}"
@@ -232,7 +232,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           aws_creds = AwsCredentials(aws_access_key_id=id_, aws_secret_access_key=key_)
           aws_creds.save(block_, overwrite=True)
           
-          s3 = S3(bucket_path=path_, aws_access_key_id=id_, aws_secret_access_key=key_)
+          s3 = S3(bucket_path=s3path_, aws_access_key_id=id_, aws_secret_access_key=key_)
           s3.save(block_, overwrite=True)
           
           ecs = ECSTask(
