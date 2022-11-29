@@ -65,7 +65,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: s3-stack
+          name: "s3-stack-${{ env.CU_TASK_ID }}"
           template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
           parameter-overrides: "CUTaskID=${{ env.CU_TASK_ID }}"
           no-fail-on-empty-changeset: "1"
@@ -92,7 +92,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
       - name: Create new ECR repository using AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "${{ env.CU_TASK_ID }}-ecr" #NOTE: here the '-ecr' is at the end cause otherwise Error: 1 validation error detected: Value '$ecr-{{ env.PROJECT }}' at 'stackName' failed to satisfy constraint
+          name: "ecr-stack-${{ env.CU_TASK_ID }}"
           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
           parameter-overrides: "CUTaskID=${{ env.CU_TASK_ID }}"
           no-fail-on-empty-changeset: "1"
@@ -148,7 +148,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
       - name: Deploy to ECS with AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: ${{ env.PROJECT }}
+          name: "ecs-stack-${{ env.CU_TASK_ID }}"
           template: deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: "cpu=${{ github.event.inputs.cpu }},memory=${{ github.event.inputs.memory }},project=${{ env.PROJECT }},cluster=${{ env.ECS_CLUSTER }},image=${{ needs.ecr-repo.outputs.image }},awsaccountid=${{steps.aws.outputs.accountid}},region=${{ env.AWS_REGION }}"
