@@ -92,7 +92,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
       - name: Create new ECR repository using AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "$ecr-{{ env.PROJECT }}"
+          name: "${{ env.PROJECT }}-ecr" #NOTE: here the '-ecr' is at the end cause otherwise Error: 1 validation error detected: Value '$ecr-{{ env.PROJECT }}' at 'stackName' failed to satisfy constraint
           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
           parameter-overrides: "RepositoryName=${{ env.PROJECT }}"
           no-fail-on-empty-changeset: "1"
