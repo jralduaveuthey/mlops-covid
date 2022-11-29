@@ -19,10 +19,10 @@ on:
         description: S3 path in the format bucket/path
         required: true
         default: 'prefect-141507290110/prod'
-      block_name:
-        description: Name of the S3 and ECS blocks
+      cu_task_id:
+        description: CU Task ID (Name of the S3 and ECS blocks)
         required: true
-        default: 'prod'
+        default: '34aghxe'
       prefect-version:
         description: Prefect version for flows
         required: true
@@ -35,9 +35,10 @@ on:
         type: string
 
 env:
-  PROJECT: dataflowops
-  ECS_CLUSTER: prefect
-  BLOCK: ${{ github.event.inputs.block_name }}
+  ECS_CLUSTER: $ecs-{{ github.event.inputs.cu_task_id }}
+  CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
+  PROJECT: $prj-{{ github.event.inputs.cu_task_id }}
+  BLOCK: $blk-{{ github.event.inputs.cu_task_id }}
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
 
@@ -59,10 +60,13 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           aws-region: ${{  env.AWS_REGION }}
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
+        # env: #NOTE: CU_TASK_ID unnecessary here cause it is already in the env of the whole template 
+        #   CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: s3-stack
           template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
+          parameter-overrides: "CUTaskID=$s3-{{ env.CU_TASK_ID }}"
           no-fail-on-empty-changeset: "1"
 
   ecr-repo:
@@ -87,7 +91,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
       - name: Create new ECR repository using AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "${{ env.PROJECT }}-ecr"
+          name: "$ecr-{{ env.PROJECT }}"
           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
           parameter-overrides: "RepositoryName=${{ env.PROJECT }}"
           no-fail-on-empty-changeset: "1"
@@ -217,9 +221,10 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           cluster_ = "${{ env.ECS_CLUSTER }}"
           cpu_ = "${{ github.event.inputs.cpu }}"
           memory_ = "${{ github.event.inputs.memory }}"
+          project = "${{ env.PROJECT }}"
           aws_acc_id = "$AWS_ACCOUNT_ID"
-          exec_role = f"arn:aws:iam::{aws_acc_id}:role/dataflowops_ecs_execution_role"
-          task_role = f"arn:aws:iam::{aws_acc_id}:role/dataflowops_ecs_execution_role"
+          exec_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role" 
+          task_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role"
           
           aws_creds = AwsCredentials(aws_access_key_id=id_, aws_secret_access_key=key_)
           aws_creds.save(block_, overwrite=True)

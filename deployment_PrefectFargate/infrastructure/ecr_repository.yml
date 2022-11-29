@@ -5,7 +5,7 @@ Parameters:
     Type: String
     Default: dataflowops
 Resources:
-  MyRepository:
+  ECRRepo:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref RepositoryName

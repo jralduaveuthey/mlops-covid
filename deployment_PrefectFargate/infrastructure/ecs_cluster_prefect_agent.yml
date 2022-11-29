@@ -95,7 +95,7 @@ Resources:
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${project}_ecs_execution_role"
+      RoleName: !Sub "${project}_ecs_execution_role" #TODO: this is hardcoded here and in ecs_prefect_agent.yml => have it soft coded
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
