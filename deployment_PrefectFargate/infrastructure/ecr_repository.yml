@@ -1,14 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Create ECR repository and lifecycle policy
 Parameters:
-  RepositoryName:
+  CUTaskID:
     Type: String
-    Default: dataflowops
+    Default: cutaskid
 Resources:
   ECRRepo:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref RepositoryName
+      RepositoryName: !Join ['-', ['ecr', !Ref CUTaskID, !Ref 'AWS::AccountId']]
       LifecyclePolicy:
         LifecyclePolicyText: >
           {
