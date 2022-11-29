@@ -8,13 +8,13 @@ on:
         required: true
         default: '512'
         type: choice
-        options: ['256', '512', '1024', '2048', '4096'] #NOTE: I test much with different values cause prefect flows do not work and they are always "late"
+        options: ['256', '512', '1024', '2048', '4096']
       memory:
         description: Memory for the agent
         required: true
         default: '1024'
         type: choice
-        options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192'] #NOTE: I test much with different values cause prefect flows do not work and they are always "late"
+        options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
       s3_path:
         description: S3 path in the format bucket/path
         required: true
@@ -247,7 +247,7 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
       - name: Upload to S3 - maintenance flow #TODO: delete everything under utilities/ that I do not need in my final version
         working-directory: ./deployment_PrefectFargate
         id: maintenance
-        run: prefect deployment build utilities/maintenance.py:maintenance -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t maintenance --interval 10
+        run: prefect deployment build utilities/maintenance.py:maintenance -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t maintenance --interval 60
 
   list-flows:
     name: List Prefect flows
