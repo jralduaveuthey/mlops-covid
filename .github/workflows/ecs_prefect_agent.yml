@@ -15,8 +15,8 @@ on:
         default: '1024'
         type: choice
         options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
-      cu_task_id:
-        description: CU Task ID (For the name of the Prefect blocks, ...)
+      project_id:
+        description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
         required: true
         default: '34aghxe'
       aws-region:
@@ -51,12 +51,12 @@ on:
         type: string
 
 env:
-  CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
-  ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs #NOTE: here I add suffixes and not prefixes cause otherwise Error: 1 validation error detected
-  ECR_REPO: ${{ github.event.inputs.cu_task_id }}-ecr
-  S3_BUCKET: ${{ github.event.inputs.cu_task_id }}-s3
-  PROJECT: ${{ github.event.inputs.cu_task_id }}-prj
-  BLOCK: ${{ github.event.inputs.cu_task_id }}-blk
+  PROJECT_ID: ${{ github.event.inputs.project_id }}
+  ECS_CLUSTER: ${{ github.event.inputs.project_id }}-ecs #NOTE: here I add suffixes and not prefixes cause otherwise Error: 1 validation error detected
+  ECR_REPO: ${{ github.event.inputs.project_id }}-ecr
+  S3_BUCKET: ${{ github.event.inputs.project_id }}-s3
+  PROJECT: ${{ github.event.inputs.project_id }}-prj
+  BLOCK: ${{ github.event.inputs.project_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
   PROV_ST: ${{ github.event.inputs.prov_st }}
@@ -84,11 +84,9 @@ jobs:
           aws-region: ${{  env.AWS_REGION }}
       # Deploy to AWS CloudFormation
       - name: Deploy to AWS CloudFormation
-        env: #NOTE: CU_TASK_ID unnecessary here cause it is already in the env of the whole template 
-          CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "s3-stack-${{ env.CU_TASK_ID }}"
+          name: "s3-stack-${{ env.PROJECT_ID }}"
           template: deployment_PrefectFargate/infrastructure/s3-stack.yaml
           parameter-overrides: "S3BUCKET=${{ env.S3_BUCKET }}"
           no-fail-on-empty-changeset: "1"
@@ -115,7 +113,7 @@ jobs:
       - name: Create new ECR repository using AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "ecr-stack-${{ env.CU_TASK_ID }}"
+          name: "ecr-stack-${{ env.PROJECT_ID }}"
           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
           parameter-overrides: "ECRREPO=${{ env.ECR_REPO }}"
           no-fail-on-empty-changeset: "1"
@@ -171,7 +169,7 @@ jobs:
       - name: Deploy to ECS with AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "ecs-stack-${{ env.CU_TASK_ID }}"
+          name: "ecs-stack-${{ env.PROJECT_ID }}"
           template: deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: "cpu=${{ github.event.inputs.cpu }},memory=${{ github.event.inputs.memory }},project=${{ env.PROJECT }},cluster=${{ env.ECS_CLUSTER }},image=${{ needs.ecr-repo.outputs.image }},awsaccountid=${{steps.aws.outputs.accountid}},region=${{ env.AWS_REGION }}"
@@ -274,5 +272,5 @@ jobs:
       - name: Upload to S3 - covid_pred.py flow
         working-directory: ./deployment_PrefectFargate
         id: covid_pred 
-        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --cron=$CRON_SCH --timezone=$TIMEZONE #--interval 120 
+        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --interval 120  # --cron=$CRON_SCH --timezone=$TIMEZONE
         #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 

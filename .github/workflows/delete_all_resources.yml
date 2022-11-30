@@ -8,18 +8,18 @@ on:
         required: true
         default: 'eu-central-1'
         type: string
-      cu_task_id:
-        description: CU Task ID (For the name of the Prefect blocks, ...)
+      project_id:
+        description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
         required: true
         default: '34aghxe'
 
 
 env:
-  CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
-  PROJECT: ${{ github.event.inputs.cu_task_id }}-prj
-  ECR_REPO: ${{ github.event.inputs.cu_task_id }}-ecr
-  ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs 
-  S3_BUCKET: ${{ github.event.inputs.cu_task_id }}-s3
+  PROJECT_ID: ${{ github.event.inputs.project_id }}
+  PROJECT: ${{ github.event.inputs.project_id }}-prj
+  ECR_REPO: ${{ github.event.inputs.project_id }}-ecr
+  ECS_CLUSTER: ${{ github.event.inputs.project_id }}-ecs 
+  S3_BUCKET: ${{ github.event.inputs.project_id }}-s3
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
@@ -40,21 +40,21 @@ jobs:
         continue-on-error: true
         run: |
           aws ecr delete-repository --repository-name ${{ env.ECR_REPO }} --force
-          aws cloudformation delete-stack --stack-name "ecr-stack-${{ env.CU_TASK_ID }}"
-          aws cloudformation wait stack-delete-complete --stack-name "ecr-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation delete-stack --stack-name "ecr-stack-${{ env.PROJECT_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecr-stack-${{ env.PROJECT_ID }}"
 
       - name: Delete ECS agent service
         continue-on-error: true
         run: |
-          aws cloudformation delete-stack --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
-          aws cloudformation wait stack-delete-complete --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation delete-stack --stack-name "ecs-stack-${{ env.PROJECT_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecs-stack-${{ env.PROJECT_ID }}"
 
       - name: Delete S3 Bucket
         continue-on-error: true
         run: |
           aws s3 rb s3://${{ env.S3_BUCKET }}  --force  
-          aws cloudformation delete-stack --stack-name "s3-stack-${{ env.CU_TASK_ID }}"
-          aws cloudformation wait stack-delete-complete --stack-name "s3-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation delete-stack --stack-name "s3-stack-${{ env.PROJECT_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "s3-stack-${{ env.PROJECT_ID }}"
 
       - name: All AWS resources deleted
         run: echo '### All AWS resources deleted! :tada:' >> $GITHUB_STEP_SUMMARY

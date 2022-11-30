@@ -23,6 +23,23 @@ prefect cloud workspace set --workspace "jaimerv/workinonit"
 "jaimerv/workinonit" is the name of my workspace in my Prefect Cloud account, so you will need to pass here the name of the workspace you created in your account.
 
 
+## Deploy ECS Cluster, Prefect agent ECS service and ECR repository
+Run the Github action called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository" in a Github Action on the browser.  
+The inputs for the Github action are the following:
+- cpu:
+- memory:
+- project_id:
+- XAKI
+
+
+
+
+
+
+
+
+
+
 ## Run a flow from a deployment getting the flow code from remote storage in S3 bucket 
 ### Register a S3 Block
 Create a S3 Block in Prefect Cloud(like done here: https://discourse.prefect.io/t/how-to-deploy-prefect-2-0-flows-to-aws/1252/5)
