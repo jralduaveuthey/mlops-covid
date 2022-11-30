@@ -41,7 +41,7 @@ on:
       cron_sch:
         description: Cron schedule to use in the deployment
         required: true
-        default: '40 13 * * *' #“At 13:40.” every day
+        default: '50 13 * * *' #“At 13:50.” every day
         type: string
       timezone:
         description: Timezone to use in the cron schedule 

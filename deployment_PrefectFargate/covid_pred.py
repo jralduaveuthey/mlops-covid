@@ -111,7 +111,7 @@ def apply_model_today_Province_State(run_id, output_file,Province_State): #NOTE:
                                                     #other functions not separated into "tasks" (meaning functions call each other like inside predict_past it calls get_data_last_days)
     logger = get_run_logger()
     
-    logger.info(f">>>>>>>>>>>>>>>>>> Getting COVID data from yesterday from CSSE at Johns Hopkins University's Github ...")
+    logger.info(f">>>>>>>>>>>>>>>>>> Getting COVID data from yesterday from CSSE at Johns Hopkins University's Github ...FUCKING LUCK :D") #TODO: Delete this last part
     df = get_data_last_days(1) #Get data from yesterday
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Loading the model with RUN_ID={run_id}...')
