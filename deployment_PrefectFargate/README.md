@@ -11,7 +11,7 @@ Here the script deployment_docker/covid_pred.py is a copy of deployment/inbetwee
 To run the Deployments I will use the Prefect Cloud following the instructions here: https://docs.prefect.io/ui/cloud-getting-started/
 To know more in detail check the folder deployment_PrefectDockerAgent/cloud-getting-started
 
-## Login in Cloud and set workspace
+# Login in Cloud and set workspace
 Login in the Prefect Cloud in the terminal with:
 ```
 prefect cloud login -k <API_KEY>
@@ -23,10 +23,17 @@ prefect cloud workspace set --workspace "jaimerv/workinonit"
 "jaimerv/workinonit" is the name of my workspace in my Prefect Cloud account, so you will need to pass here the name of the workspace you created in your account.
 
 
-## Deploy ECS Cluster, Prefect agent ECS service and ECR repository
-Run the Github action called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository" in a Github Action on the browser.  
+# Deploy ECS Cluster, Prefect agent ECS service and ECR repository
+Before running the Github action (called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository") on the browser, you have to enter some Github Secrets and Inputs for the action to work.
 
-### Inputs for the Deployment Github action
+## Github necessary secrets 
+- AWS_ACCESS_KEY_ID: You can see how to obtain one [here.](https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html)
+- AWS_SECRET_ACCESS_KEY: You can see how to obtain one [here.](https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html)
+- PREFECT_API_KEY: You can see more detailed info [here.](https://docs.prefect.io/ui/cloud-getting-started/#create-an-api-key)
+- PREFECT_API_URL: You can see more detailed info [here.](https://docs.prefect.io/ui/cloud-getting-started/#create-an-api-key)
+
+
+## Inputs for the Deployment Github action
 The inputs for the Github action are the following:
 - cpu: CPU for the agent. The default is '512' but you can choose between the following ['256', '512', '1024', '2048', '4096']
 - memory: Memory for the agent. The default is '1024' but you can choose between the following ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
@@ -38,12 +45,14 @@ The inputs for the Github action are the following:
 - cron_sch: Cron schedule to use in the deployment
 - timezone: Timezone to use in the cron schedule 
 
-### Jobs for the Deployment
-1. Create S3 Bucket
-Here the S3 Bucket will be created where the flows used by Prefect will be stored
-2. ECR Repo and Image
-3. ECS Cluster and Prefect Agent
-4. Prefect Blocks and S3 Upload
+## Jobs for the Deployment
+1. **Create S3 Bucket**: Creates the S3 Bucket where and all the files in this folder will be copied to the bucket. 
+
+2. **ECR Repo & Image**: Creates a new ECR repository using the AWS CloudFormation under _deployment_PrefectFargate\infrastructure\ecr_repository.yml_. Then it logs in to our Amazon ECR and builds, tags, and pushes an image to this ECR based on the file _deployment_PrefectFargate\Dockerfile_.
+
+3. **ECS Cluster & Prefect Agent**: Adds Prefect Cloud Secrets to SSM Parameter Store (needed for container in ECS task): PREFECT_API_URL + PREFECT_API_KEY. Then deploys to ECS with the AWS CloudFormation template _deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml_. Then generates a task definition and uploads it as artifact so are able to see it in the Github page after the action is finished.
+
+4. **Prefect Blocks & S3 Upload**: Creates the Prefect Blocks for AWS Credentials and S3. Creates ECS Task with the image that was pushed in the previous step.  and & Upload to S3: create a deployment.yaml deployment definition file that will be updloaded to and used by the Prefect Agent to run your flow.
 
 
 

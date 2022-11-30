@@ -175,7 +175,6 @@ jobs:
           aws ssm put-parameter --type SecureString --name PREFECT_API_KEY --value ${{ secrets.PREFECT_API_KEY }} --overwrite
           export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
           echo "accountid=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT
-#          echo ::set-output name=accountid::$AWS_ACCOUNT_ID
 
       - name: Deploy to ECS with AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
