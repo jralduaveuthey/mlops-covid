@@ -1,0 +1,100 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
+        required: true
+        default: '34aghxe'
+      aws-region:
+        description: AWS Region
+        required: true
+        default: 'eu-central-1'
+        type: string
+      prefect-version:
+        description: Prefect version for flows
+        required: true
+        default: '2.6.9'
+        type: string
+      prov_st:
+        description: City where you want to predict the covid cases
+        required: true
+        default: 'Madrid'
+        type: string
+        #TODO: add (everywhere were needed) s3-mlflow-artifacts-path and s3-results-path and pass them as inputs to covid_pred.py
+      # s3-mlflow-artifacts-path:
+      #   description: S3 Bucket/path where your mlflow artifacts (logged models) are stored
+      #   required: true
+      #   default: 'mlflow-artifacts-remote-jaime/4/'
+      #   type: string
+      # s3-results-path:
+      #   description: S3 Bucket/path where the result CSVs of the predictions will be stored
+      #   required: true
+      #   default: 'covid-predictons-jaime'
+      #   type: string
+      run_id:
+        description: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/ 
+        required: true
+        default: '16082a31f2be4eadb6f368b4ded2d309'
+        type: string
+      cron_sch:
+        description: Cron schedule to use in the deployment
+        required: true
+        default: '56 10 * * *' #“At 10:56.” every day
+        type: string
+      timezone:
+        description: Timezone to use in the cron schedule 
+        required: true
+        default: 'Europe/Berlin'
+        type: string
+
+env:
+  PROJECT: ${{ github.event.inputs.project_id }}-prj
+  BLOCK: ${{ github.event.inputs.project_id }}-blk
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
+  PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
+  PROV_ST: ${{ github.event.inputs.prov_st }}
+  RUN_ID: ${{ github.event.inputs.run_id }}
+  CRON_SCH: ${{ github.event.inputs.cron_sch }}
+  TIMEZONE: ${{ github.event.inputs.timezone }}  
+
+jobs: 
+  cd-job:
+    name: Updates flow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Python dependencies
+        working-directory: ./deployment_PrefectFargate
+        run: |
+          pip install prefect==$PREFECT_VERSION
+          pip install .
+          prefect block register -m prefect_aws.ecs
+
+      - name: Prefect Cloud login
+        working-directory: ./deployment_PrefectFargate
+        run: |
+          prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }}
+          prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}
+
+      - name: AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: 'no'
+
+      - name: (Re)Upload to S3 - covid_pred.py flow
+        working-directory: ./deployment_PrefectFargate
+        id: covid_pred #TODO: have it working with cron and timezone
+        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID  --cron $CRON_SCH --timezone $TIMEZONE #--interval 120 
+        #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
