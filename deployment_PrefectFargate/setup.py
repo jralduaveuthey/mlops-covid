@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("requirements.txt") as install_requires_file:
     requirements = install_requires_file.read().strip().split("\n")
 
-setup( #TODO: change this file accordingly if necessary. It is used in "ECR Repo & Image">"Build, tag, and push image to Amazon ECR"
+setup( 
     name="dataflowops",
     description="Custom modules for Prefect flows",
     license="Apache License 2.0",
