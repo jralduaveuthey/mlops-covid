@@ -18,8 +18,9 @@ env:
   CU_TASK_ID: ${{ github.event.inputs.cu_task_id }}
   PROJECT: ${{ github.event.inputs.cu_task_id }}-prj
   ECR_REPO: ${{ github.event.inputs.cu_task_id }}-ecr
-  AWS_REGION: ${{ github.event.inputs.aws-region }}
   ECS_CLUSTER: ${{ github.event.inputs.cu_task_id }}-ecs 
+  S3_BUCKET: ${{ github.event.inputs.cu_task_id }}-s3
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
   delete-stack:
@@ -47,6 +48,13 @@ jobs:
         run: |
           aws cloudformation delete-stack --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
           aws cloudformation wait stack-delete-complete --stack-name "ecs-stack-${{ env.CU_TASK_ID }}"
+
+      - name: Delete S3 Bucket
+        continue-on-error: true
+        run: |
+          aws s3 rb s3://${{ env.S3_BUCKET }}  --force  
+          aws cloudformation delete-stack --stack-name "s3-stack-${{ env.CU_TASK_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "s3-stack-${{ env.CU_TASK_ID }}"
 
       - name: All AWS resources deleted
         run: echo '### All AWS resources deleted! :tada:' >> $GITHUB_STEP_SUMMARY

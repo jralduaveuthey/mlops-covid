@@ -63,6 +63,7 @@ env:
   RUN_ID: ${{ github.event.inputs.run_id }}
   CRON_SCH: ${{ github.event.inputs.cron_sch }}
   TIMEZONE: ${{ github.event.inputs.timezone }}
+  #TODO: (nice to have) add all the variables used in the template here: exec_role, task_role, stack names, ...
   
 
 jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "needs"
@@ -93,188 +94,188 @@ jobs: #TODO: uncomment all the jobs for the final version AND THE DEPENDENCIES "
           parameter-overrides: "S3BUCKET=${{ env.S3_BUCKET }}"
           no-fail-on-empty-changeset: "1"
 
-  ecr-repo:
-    name: ECR Repo & Image
-    runs-on: ubuntu-latest
-    needs: create-s3-bucket
-    outputs:
-      image: ${{ steps.build-image.outputs.image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Generate Markdown Summary
-        run: echo "AWS ECS deployment with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mask-aws-account-id: 'no'
+#   ecr-repo:
+#     name: ECR Repo & Image
+#     runs-on: ubuntu-latest
+#     needs: create-s3-bucket
+#     outputs:
+#       image: ${{ steps.build-image.outputs.image }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - name: Generate Markdown Summary
+#         run: echo "AWS ECS deployment with commit hash $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+#           mask-aws-account-id: 'no'
 
-      - name: Create new ECR repository using AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: "ecr-stack-${{ env.CU_TASK_ID }}"
-          template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
-          parameter-overrides: "ECRREPO=${{ env.ECR_REPO }}"
-          no-fail-on-empty-changeset: "1"
+#       - name: Create new ECR repository using AWS CloudFormation
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1
+#         with:
+#           name: "ecr-stack-${{ env.CU_TASK_ID }}"
+#           template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
+#           parameter-overrides: "ECRREPO=${{ env.ECR_REPO }}"
+#           no-fail-on-empty-changeset: "1"
 
-      - name: Flow deployment finished
-        run: echo "ECR repository created at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+#       - name: Flow deployment finished
+#         run: echo "ECR repository created at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        working-directory: ./deployment_PrefectFargate
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          export IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
-          docker build -t $IMAGE .
-          docker push $IMAGE
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+#       - name: Build, tag, and push image to Amazon ECR
+#         working-directory: ./deployment_PrefectFargate
+#         id: build-image
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           IMAGE_TAG: ${{ github.sha }}
+#         run: |
+#           export IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+#           docker build -t $IMAGE .
+#           docker push $IMAGE
+#           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Flow deployments finished
-        run: echo "ECR image ${{ steps.build-image.outputs.image }} built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+#       - name: Flow deployments finished
+#         run: echo "ECR image ${{ steps.build-image.outputs.image }} built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
 
-  prefect-agent-ecs:
-    name: ECS Cluster & Prefect Agent
-    runs-on: ubuntu-latest
-    needs: ecr-repo
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+#   prefect-agent-ecs:
+#     name: ECS Cluster & Prefect Agent
+#     runs-on: ubuntu-latest
+#     needs: ecr-repo
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mask-aws-account-id: 'no'
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+#           mask-aws-account-id: 'no'
 
-      - name: Add Prefect Cloud Secrets to SSM Parameter Store (needed for container in ECS task)
-        working-directory: ./deployment_PrefectFargate
-        id: aws
-        run: |
-          aws ssm put-parameter --type SecureString --name PREFECT_API_URL --value ${{ secrets.PREFECT_API_URL }} --overwrite
-          aws ssm put-parameter --type SecureString --name PREFECT_API_KEY --value ${{ secrets.PREFECT_API_KEY }} --overwrite
-          export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-          echo "accountid=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT
-#          echo ::set-output name=accountid::$AWS_ACCOUNT_ID
+#       - name: Add Prefect Cloud Secrets to SSM Parameter Store (needed for container in ECS task)
+#         working-directory: ./deployment_PrefectFargate
+#         id: aws
+#         run: |
+#           aws ssm put-parameter --type SecureString --name PREFECT_API_URL --value ${{ secrets.PREFECT_API_URL }} --overwrite
+#           aws ssm put-parameter --type SecureString --name PREFECT_API_KEY --value ${{ secrets.PREFECT_API_KEY }} --overwrite
+#           export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+#           echo "accountid=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT
+# #          echo ::set-output name=accountid::$AWS_ACCOUNT_ID
 
-      - name: Deploy to ECS with AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: "ecs-stack-${{ env.CU_TASK_ID }}"
-          template: deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml
-          capabilities: CAPABILITY_NAMED_IAM
-          parameter-overrides: "cpu=${{ github.event.inputs.cpu }},memory=${{ github.event.inputs.memory }},project=${{ env.PROJECT }},cluster=${{ env.ECS_CLUSTER }},image=${{ needs.ecr-repo.outputs.image }},awsaccountid=${{steps.aws.outputs.accountid}},region=${{ env.AWS_REGION }}"
+#       - name: Deploy to ECS with AWS CloudFormation
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1
+#         with:
+#           name: "ecs-stack-${{ env.CU_TASK_ID }}"
+#           template: deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml
+#           capabilities: CAPABILITY_NAMED_IAM
+#           parameter-overrides: "cpu=${{ github.event.inputs.cpu }},memory=${{ github.event.inputs.memory }},project=${{ env.PROJECT }},cluster=${{ env.ECS_CLUSTER }},image=${{ needs.ecr-repo.outputs.image }},awsaccountid=${{steps.aws.outputs.accountid}},region=${{ env.AWS_REGION }}"
 
-      - name: ECS Service Deployment finished
-        run: echo "ECS Service Deployment finished at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+#       - name: ECS Service Deployment finished
+#         run: echo "ECS Service Deployment finished at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
 
-      - name: Generate task definition
-        working-directory: ./deployment_PrefectFargate
-        id: task-definition
-        run: aws ecs describe-task-definition --task-definition $PROJECT --query taskDefinition > task-definition.json
+#       - name: Generate task definition
+#         working-directory: ./deployment_PrefectFargate
+#         id: task-definition
+#         run: aws ecs describe-task-definition --task-definition $PROJECT --query taskDefinition > task-definition.json
 
-      - name: Upload task definition as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ECS task definition
-          path: deployment_PrefectFargate/task-definition.json
+#       - name: Upload task definition as artifact
+#         uses: actions/upload-artifact@v3
+#         with:
+#           name: ECS task definition
+#           path: deployment_PrefectFargate/task-definition.json
 
-      - name: Summary
-        run: echo 'AWS ECS agent successfully deployed and ready to run your flows! :rocket:' >> $GITHUB_STEP_SUMMARY
+#       - name: Summary
+#         run: echo 'AWS ECS agent successfully deployed and ready to run your flows! :rocket:' >> $GITHUB_STEP_SUMMARY
 
-  blocks:
-    name: Prefect Blocks & S3 Upload
-    runs-on: ubuntu-latest
-    needs: ecr-repo
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+#   blocks:
+#     name: Prefect Blocks & S3 Upload
+#     runs-on: ubuntu-latest
+#     needs: ecr-repo
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
+#       - name: Set up Python 3.9
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.9
 
-      - name: Python dependencies
-        working-directory: ./deployment_PrefectFargate
-        run: |
-          pip install prefect==$PREFECT_VERSION
-          pip install .
-          prefect block register -m prefect_aws.ecs
+#       - name: Python dependencies
+#         working-directory: ./deployment_PrefectFargate
+#         run: |
+#           pip install prefect==$PREFECT_VERSION
+#           pip install .
+#           prefect block register -m prefect_aws.ecs
 
-      - name: Prefect Cloud login
-        working-directory: ./deployment_PrefectFargate
-        run: |
-          prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }}
-          prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}
+#       - name: Prefect Cloud login
+#         working-directory: ./deployment_PrefectFargate
+#         run: |
+#           prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }}
+#           prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}
 
-      - name: AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mask-aws-account-id: 'no'
+#       - name: AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+#           mask-aws-account-id: 'no'
 
-      - name: Create Blocks & Upload to S3
-        # working-directory: ./deployment_PrefectFargate #TODO: delete all commented lines
-        id: aws_ecs_ecs_blocks
-        #TODO: substitute img_= "${{ needs.ecr-repo.outputs.image }}" once I have all the jobs running together
-        run: |
-          export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-          cat <<EOF > aws_ecs_blocks.py
-          from prefect.filesystems import S3
-          from prefect_aws.ecs import ECSTask, AwsCredentials
+#       - name: Create Blocks & Upload to S3
+#         # working-directory: ./deployment_PrefectFargate #TODO: delete all commented lines
+#         id: aws_ecs_ecs_blocks
+#         #TODO: substitute img_= "${{ needs.ecr-repo.outputs.image }}" once I have all the jobs running together
+#         run: |
+#           export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+#           cat <<EOF > aws_ecs_blocks.py
+#           from prefect.filesystems import S3
+#           from prefect_aws.ecs import ECSTask, AwsCredentials
           
-          id_ = "${{ secrets.AWS_ACCESS_KEY_ID }}"
-          key_ = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          s3path_ = "${{ env.S3_BUCKET }}" 
-          img_ = "${{ needs.ecr-repo.outputs.image }}"
-          block_ = "$BLOCK"
-          cluster_ = "${{ env.ECS_CLUSTER }}"
-          cpu_ = "${{ github.event.inputs.cpu }}"
-          memory_ = "${{ github.event.inputs.memory }}"
-          project = "${{ env.PROJECT }}"
-          aws_acc_id = "$AWS_ACCOUNT_ID"
-          exec_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role" 
-          task_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role"
+#           id_ = "${{ secrets.AWS_ACCESS_KEY_ID }}"
+#           key_ = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+#           s3path_ = "${{ env.S3_BUCKET }}" 
+#           img_ = "${{ needs.ecr-repo.outputs.image }}"
+#           block_ = "$BLOCK"
+#           cluster_ = "${{ env.ECS_CLUSTER }}"
+#           cpu_ = "${{ github.event.inputs.cpu }}"
+#           memory_ = "${{ github.event.inputs.memory }}"
+#           project = "${{ env.PROJECT }}"
+#           aws_acc_id = "$AWS_ACCOUNT_ID"
+#           exec_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role" 
+#           task_role = f"arn:aws:iam::{aws_acc_id}:role/{project}_ecs_execution_role"
           
-          aws_creds = AwsCredentials(aws_access_key_id=id_, aws_secret_access_key=key_)
-          aws_creds.save(block_, overwrite=True)
+#           aws_creds = AwsCredentials(aws_access_key_id=id_, aws_secret_access_key=key_)
+#           aws_creds.save(block_, overwrite=True)
           
-          s3 = S3(bucket_path=s3path_, aws_access_key_id=id_, aws_secret_access_key=key_)
-          s3.save(block_, overwrite=True)
+#           s3 = S3(bucket_path=s3path_, aws_access_key_id=id_, aws_secret_access_key=key_)
+#           s3.save(block_, overwrite=True)
           
-          ecs = ECSTask(
-              aws_credentials=aws_creds,
-              image=img_,
-              cpu=cpu_,
-              memory=memory_,
-              stream_output=True,
-              configure_cloudwatch_logs=True,
-              cluster=cluster_,
-              execution_role_arn=exec_role,
-              task_role_arn=task_role,
-          )
-          ecs.save(block_, overwrite=True)
-          EOF
-          python aws_ecs_blocks.py
-      - name: Blocks creation finished
-        run: echo "AWS and ECS blocks built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+#           ecs = ECSTask(
+#               aws_credentials=aws_creds,
+#               image=img_,
+#               cpu=cpu_,
+#               memory=memory_,
+#               stream_output=True,
+#               configure_cloudwatch_logs=True,
+#               cluster=cluster_,
+#               execution_role_arn=exec_role,
+#               task_role_arn=task_role,
+#           )
+#           ecs.save(block_, overwrite=True)
+#           EOF
+#           python aws_ecs_blocks.py
+#       - name: Blocks creation finished
+#         run: echo "AWS and ECS blocks built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload to S3 - covid_pred.py flow #TODO: delete everything under utilities/ that I do not need in my final version
-        working-directory: ./deployment_PrefectFargate
-        id: covid_pred #TODO: here use cron and timezone instead of interval
-        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --interval 120 #--cron=$CRON_SCH --timezone=$TIMEZONE
-        #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
+#       - name: Upload to S3 - covid_pred.py flow #TODO: delete everything under utilities/ that I do not need in my final version
+#         working-directory: ./deployment_PrefectFargate
+#         id: covid_pred #TODO: here use cron and timezone instead of interval
+#         run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --interval 120 #--cron=$CRON_SCH --timezone=$TIMEZONE
+#         #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
