@@ -23,7 +23,7 @@ prefect cloud workspace set --workspace "jaimerv/workinonit"
 "jaimerv/workinonit" is the name of my workspace in my Prefect Cloud account, so you will need to pass here the name of the workspace you created in your account.
 
 
-# Deploy ECS Cluster, Prefect agent ECS service and ECR repository
+# Deploy Infrastructure
 Before running the Github action (called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository") on the browser, you have to enter some Github Secrets and Inputs for the action to work.
 
 ## Github necessary secrets 
@@ -52,10 +52,19 @@ The inputs for the Github action are the following:
 
 3. **ECS Cluster & Prefect Agent**: Adds Prefect Cloud Secrets to SSM Parameter Store (needed for container in ECS task): PREFECT_API_URL + PREFECT_API_KEY. Then deploys to ECS with the AWS CloudFormation template _deployment_PrefectFargate/infrastructure/ecs_cluster_prefect_agent.yml_. Then generates a task definition and uploads it as artifact so are able to see it in the Github page after the action is finished.
 
-4. **Prefect Blocks & S3 Upload**: Creates the Prefect Blocks for AWS Credentials and S3. Creates ECS Task with the image that was pushed in the previous step.  and & Upload to S3: create a deployment.yaml deployment definition file that will be updloaded to and used by the Prefect Agent to run your flow.
+4. **Prefect Blocks & S3 Upload**: Creates the Prefect Blocks for AWS Credentials and S3. Creates ECS Task with the image that was pushed in the previous step. For the deployment the schedule given in the Github action inputs (cron + timezone) will be used.
+Then it creates a deployment definition (yaml) file, that will be updloaded to the S3 bucket created in the first step, and used by the Prefect Agent to run your flow.
+
+## See the results in the Prefect Cloud
+In your browser you can go to the [Prefect Cloud](https://app.prefect.cloud/) and see your new Flow Runs, Blocks, Work Queue, ... For the Flow Runs you can also see the Logs that were defined in _deployment_PrefectFargate\covid_pred.py_. More info about the Prefect Cloud and how to operate with it can be found [here.](https://docs.prefect.io/ui/overview/)
 
 
+# Deploy ECS Cluster, Prefect agent ECS service and ECR repository
+>>>>TODO
 
+
+# Destroy AWS Resources
+>>>>TODO
 
 
 

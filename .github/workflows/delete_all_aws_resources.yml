@@ -1,5 +1,4 @@
-name: 111 DELETE ECS Cluster, Prefect agent ECS service and ECR repository
-
+name: DELETE All AWS Resources
 on:
   workflow_dispatch:
     inputs:
