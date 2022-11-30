@@ -59,8 +59,18 @@ Then it creates a deployment definition (yaml) file, that will be updloaded to t
 In your browser you can go to the [Prefect Cloud](https://app.prefect.cloud/) and see your new Flow Runs, Blocks, Work Queue, ... For the Flow Runs you can also see the Logs that were defined in _deployment_PrefectFargate\covid_pred.py_. More info about the Prefect Cloud and how to operate with it can be found [here.](https://docs.prefect.io/ui/overview/)
 
 
-# Deploy ECS Cluster, Prefect agent ECS service and ECR repository
->>>>TODO
+# Continued Deployment
+If you wish to make any changes you do not have to deploy everything again, it is enough with running the Github action called **CD** (see code under _.github\workflows\CD.yml_).  
+
+Possible changes that you might wish to do include:
+- Changes in your python code (in this case _deployment_PrefectFargate\covid_pred.py_).
+- Changes in the scheduling of your function (via cron Github input in action).
+- A different run_id for a different ML model to use in production.
+- Different S3 buckets
+- ...
+
+
+At the moment the Github action is defined to be triggered on workflow_dispatch so it is easier to play with it but to use it as real CD pipeline one would only have to stop passing the parameters as Github action inputs and change the trigger. For more detailed information see [here.](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events)
 
 
 # Destroy AWS Resources
