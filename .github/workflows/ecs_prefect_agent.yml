@@ -34,8 +34,19 @@ on:
         required: true
         default: 'Madrid'
         type: string
+        #TODO: add (everywhere were needed) s3-mlflow-artifacts-path and s3-results-path and pass them as inputs to covid_pred.py
+      # s3-mlflow-artifacts-path:
+      #   description: S3 Bucket/path where your mlflow artifacts (logged models) are stored
+      #   required: true
+      #   default: 'mlflow-artifacts-remote-jaime/4/'
+      #   type: string
+      # s3-results-path:
+      #   description: S3 Bucket/path where the result CSVs of the predictions will be stored
+      #   required: true
+      #   default: 'covid-predictons-jaime'
+      #   type: string
       run_id:
-        description: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/
+        description: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/ 
         required: true
         default: '16082a31f2be4eadb6f368b4ded2d309'
         type: string

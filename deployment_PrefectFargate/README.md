@@ -25,11 +25,25 @@ prefect cloud workspace set --workspace "jaimerv/workinonit"
 
 ## Deploy ECS Cluster, Prefect agent ECS service and ECR repository
 Run the Github action called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository" in a Github Action on the browser.  
+
+### Inputs for the Deployment Github action
 The inputs for the Github action are the following:
-- cpu:
-- memory:
-- project_id:
-- XAKI
+- cpu: CPU for the agent. The default is '512' but you can choose between the following ['256', '512', '1024', '2048', '4096']
+- memory: Memory for the agent. The default is '1024' but you can choose between the following ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
+- project_id: Unique ID of your project that will be used for the name of the Prefect blocks, ...
+- aws-region: the AWS Region where your resources will be deployed
+- prefect-version: Prefect version to use for flows. Default version is '2.6.9' but it should work with any 2.* Prefect version
+- prov_st: City where you want to predict the covid cases
+- run_id: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/. This is my 
+- cron_sch: Cron schedule to use in the deployment
+- timezone: Timezone to use in the cron schedule 
+
+### Jobs for the Deployment
+1. Create S3 Bucket
+Here the S3 Bucket will be created where the flows used by Prefect will be stored
+2. ECR Repo and Image
+3. ECS Cluster and Prefect Agent
+4. Prefect Blocks and S3 Upload
 
 
 
