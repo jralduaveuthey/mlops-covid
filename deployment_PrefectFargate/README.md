@@ -54,12 +54,13 @@ The inputs for the Github action are the following:
 
 4. **Prefect Blocks & S3 Upload**: Creates the Prefect Blocks for AWS Credentials and S3. Creates ECS Task with the image that was pushed in the previous step. For the deployment the schedule given in the Github action inputs (cron + timezone) will be used.
 Then it creates a deployment definition (yaml) file, that will be updloaded to the S3 bucket created in the first step, and used by the Prefect Agent to run your flow.
+>>TODO: check if the following is true: The manifest json file and the python script with the code will be retrieved from this S3 bucket when creating the Deployment and everytime the Deployment runs.
 
 ## See the results in the Prefect Cloud
 In your browser you can go to the [Prefect Cloud](https://app.prefect.cloud/) and see your new Flow Runs, Blocks, Work Queue, ... For the Flow Runs you can also see the Logs that were defined in _deployment_PrefectFargate\covid_pred.py_. More info about the Prefect Cloud and how to operate with it can be found [here.](https://docs.prefect.io/ui/overview/)
 
 
-# Continued Deployment
+# Continuous deployment
 If you wish to make any changes you do not have to deploy everything again, it is enough with running the Github action called **CD** (see code under _.github\workflows\CD.yml_).  
 
 Possible changes that you might wish to do include:
@@ -74,65 +75,4 @@ At the moment the Github action is defined to be triggered on workflow_dispatch 
 
 
 # Destroy AWS Resources
->>>>TODO
-
-
-
-
-
-
-
-## Run a flow from a deployment getting the flow code from remote storage in S3 bucket 
-### Register a S3 Block
-Create a S3 Block in Prefect Cloud(like done here: https://discourse.prefect.io/t/how-to-deploy-prefect-2-0-flows-to-aws/1252/5)
-This S3 Block has as a S3 location the bucket: "prefect-cloud-flow-codes/covid_predictor"
-
-### Create a flow script 
-The following command creates the json file and the yaml file locally and under the s3 bucket
-```
-cd deployment_PrefectRemoteAgent/
-prefect deployment build ./covid_pred.py:covid_prediction -n CovidPrev_EC2 -t tag_CovidPrev_EC2 --storage-block s3/covid-predictor
-```
-After running this command the deployment.yaml will contain "storage:  bucket_path: prefect-cloud-flow-codes/basic_flow". That means that the manifest json file and the python script with the code will be retrieved from this S3 bucket when creating the Deployment and everytime the Deployment runs. At this point one can delete the json manifest and the python script with the flow from the local folder since they will not be used (although Prefect creates them both locally and in the bucket)
-
-Modify the deployment.yaml to add the necessary parameters. For example:
-```
-schedule:
-  cron: 20 12 * * *
-  timezone: Europe/Berlin
-parameters: {
-    "Prov_St": "Madrid",
-    "run_id": "16082a31f2be4eadb6f368b4ded2d309",
-}
-```
-This will create a Deployment to run on a Schedule “At 12:20.” every day.
-
-### Create the deployment using the Prefect CLI
-```
-prefect deployment apply deployment.yaml
-```
-This will create the Deployment and since in the yaml file has the S3 as the storage, every time the Deployment runs it will get the flow from the python script file in the S3 bucket.
-
-### Create a flow run for the given flow and deployment (if not scheduled)
-```
-prefect deployment run covid-prediction/CovidPrev_EC2
-```
-
-## Configure the EC2 instance [DELETEME]
-To have an Agent in an EC2 instance as your execution layer follow the steps here https://discourse.prefect.io/t/how-to-deploy-a-prefect-2-0-agent-to-an-ec2-instance-as-your-execution-layer/551
-
-At the moment automating this part via Terraform only works for Prefect 1.0 https://discourse.prefect.io/t/announcing-the-terraform-module-to-deploy-the-prefect-docker-agent-on-aws-ec2/584 so this part unfortunately must be done manually. 
-
-### Configue a work queue that can allocate your deployment's flow runs to agents AND Start an agent in your execution environment
-In the new created EC2 machine login into your Prefect Cloud
-
-```
-prefect cloud login -k <API_KEY>
-prefect cloud workspace set --workspace "jaimerv/workinonit"
-```
-
-and run:
-
-```
-prefect agent start -t tag_CovidPrev_EC2
-```
+To delete all your AWS resources just use the Github action "DELETE All AWS Resources" (._github\workflows\delete_all_aws_resources.yml_)

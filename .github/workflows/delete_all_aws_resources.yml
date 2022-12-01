@@ -1,4 +1,4 @@
-name: DELETE All AWS Resources
+name: DELETE Infrastructure
 on:
   workflow_dispatch:
     inputs:
@@ -22,8 +22,17 @@ env:
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
-  delete-stack:
+  delete-prefect-stack: #TODO: run python files to delete Prefect resources
+        - name: Upload to S3 - covid_pred.py flow
+        working-directory: ./deployment_PrefectFargate
+        id: covid_pred 
+        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID  --cron "$CRON_SCH" --timezone "$TIMEZONE" #--interval 120 
+        #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
+
+
+  delete-aws-stack:
     runs-on: ubuntu-latest
+    needs: delete-prefect-stack
     steps:
       - name: Checkout
         uses: actions/checkout@v3
