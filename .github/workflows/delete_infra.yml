@@ -15,6 +15,11 @@ on:
         description: Name of the Prefect flow
         required: true
         default: 'covid-prediction'
+      prefect-version:
+        description: Prefect version (same as when deploying the infrastructure)
+        required: true
+        default: '2.6.9'
+        type: string
 
 env:
   PROJECT_ID: ${{ github.event.inputs.project_id }}
@@ -24,6 +29,7 @@ env:
   S3_BUCKET: ${{ github.event.inputs.project_id }}-s3
   BLOCK: ${{ github.event.inputs.project_id }}-blk
   FLOW: ${{ github.event.inputs.flow_name }}
+  PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
