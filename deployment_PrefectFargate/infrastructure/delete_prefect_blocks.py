@@ -12,4 +12,4 @@ if __name__ == '__main__':
         blocks =  list(sys.argv[1:])
         delete_blocks(blocks)
     else:
-        raise SystemExit("No block list passed.")
+        raise SystemExit("No blocks passed.")

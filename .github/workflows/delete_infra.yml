@@ -11,7 +11,10 @@ on:
         description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
         required: true
         default: '34aghxe'
-
+      flow_name:
+        description: Name of the Prefect flow
+        required: true
+        default: 'covid-prediction'
 
 env:
   PROJECT_ID: ${{ github.event.inputs.project_id }}
@@ -20,6 +23,7 @@ env:
   ECS_CLUSTER: ${{ github.event.inputs.project_id }}-ecs 
   S3_BUCKET: ${{ github.event.inputs.project_id }}-s3
   BLOCK: ${{ github.event.inputs.project_id }}-blk
+  FLOW: ${{ github.event.inputs.flow_name }}
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
@@ -43,17 +47,20 @@ jobs:
       - name: Delete all Prefect Flows
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_flows
-        run: python ./delete_all_prefect_flows.py 
+        run: python delete_prefect_flow.py $FLOW
 
       - name: Delete all Prefect Deployments
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_deployments
-        run: python ./delete_all_prefect_deployments.py 
+        run: python delete_prefect_deployment.py $PROJECT
 
       - name: Delete all Prefect Blocks
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_blocks
-        run: python ./delete_all_prefect_blocks.py s3/$BLOCK  ecs-task/$BLOCK aws-credentials/$BLOCK 
+        run: python delete_prefect_blocks.py s3/$BLOCK  ecs-task/$BLOCK aws-credentials/$BLOCK 
+
+      - name: All Prefect resources deleted
+        run: echo '### All Prefect resources deleted! :tada:' >> $GITHUB_STEP_SUMMARY
 
   delete-aws-stack:
     runs-on: ubuntu-latest
