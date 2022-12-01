@@ -115,7 +115,6 @@ def apply_model_today_Province_State(run_id, output_file,Province_State, mlflow_
     df = get_data_last_days(1) #Get data from yesterday
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Loading the model with RUN_ID={run_id}...')
-    logger.info(f'>>>>>>> TODO DELETEME mlflow_artifacts_path={mlflow_artifacts_path}...')
     model = load_model(run_id,mlflow_artifacts_path)
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Applying the model...')
