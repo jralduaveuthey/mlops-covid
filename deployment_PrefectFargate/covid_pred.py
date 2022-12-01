@@ -101,13 +101,13 @@ def evaluate_last_days(model,num_days,TARGETS):
     return np.round(error/len(TARGETS), 5)
 
 
-def load_model(run_id):
-    logged_model = f's3://mlflow-artifacts-remote-jaime/4/{run_id}/artifacts/models'
+def load_model(run_id,mlflow_artifacts_path):
+    logged_model = f's3://{mlflow_artifacts_path}/{run_id}/artifacts/models'
     model = mlflow.pyfunc.load_model(logged_model)
     return model
 
 @task
-def apply_model_today_Province_State(run_id, output_file,Province_State): #NOTE: this sequence is only for the function predict_today_Province_State, 
+def apply_model_today_Province_State(run_id, output_file,Province_State, mlflow_artifacts_path): #NOTE: this sequence is only for the function predict_today_Province_State, 
                                                     #other functions not separated into "tasks" (meaning functions call each other like inside predict_past it calls get_data_last_days)
     logger = get_run_logger()
     
@@ -115,7 +115,7 @@ def apply_model_today_Province_State(run_id, output_file,Province_State): #NOTE:
     df = get_data_last_days(1) #Get data from yesterday
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Loading the model with RUN_ID={run_id}...')
-    model = load_model(run_id)
+    model = load_model(run_id,mlflow_artifacts_path)
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Applying the model...')
     predictions = predict_today_Province_State(model,Province_State,df) #Returns first the predicted Confirmed cases and second the predicted fatalities
@@ -133,26 +133,29 @@ def apply_model_today_Province_State(run_id, output_file,Province_State): #NOTE:
     logger.info(f'>>>>>>>>>>>>>>>>>> Finished succesfully!')
 
 
-def get_output_path(Province_State, run_id):
+def get_output_path(Province_State, run_id, s3_results_path):
     run_date = date.today()
     year = run_date.year
     month = run_date.month
     day = run_date.day
-    output_file = f's3://covid-predictons-jaime/{Province_State}_predictons_{year:04d}-{month:02d}-{day:02d}/{run_id}.csv'
+    output_file = f's3://{s3_results_path}/{Province_State}_predictons_{year:04d}-{month:02d}-{day:02d}/{run_id}.csv'
     return output_file
 
 
 @flow
 def covid_prediction(
         Prov_St: str,
-        run_id: str):
+        run_id: str,
+        mlflow_artifacts_path: str,
+        s3_results_path: str):
     
-    output_file = get_output_path(Prov_St, run_id)
+    output_file = get_output_path(Prov_St, run_id, s3_results_path)
 
     apply_model_today_Province_State(
         run_id=run_id,
         output_file=output_file,
-        Province_State=Prov_St
+        Province_State=Prov_St,
+        mlflow_artifacts_path=mlflow_artifacts_path
         )
     
 

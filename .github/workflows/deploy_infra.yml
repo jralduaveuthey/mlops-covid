@@ -34,17 +34,17 @@ on:
         required: true
         default: 'Madrid'
         type: string
-        #TODO: add (everywhere were needed) s3-mlflow-artifacts-path and s3-results-path and pass them as inputs to covid_pred.py
-      # s3-mlflow-artifacts-path:
-      #   description: S3 Bucket/path where your mlflow artifacts (logged models) are stored
-      #   required: true
-      #   default: 'mlflow-artifacts-remote-jaime/4/'
-      #   type: string
-      # s3-results-path:
-      #   description: S3 Bucket/path where the result CSVs of the predictions will be stored
-      #   required: true
-      #   default: 'covid-predictons-jaime'
-      #   type: string
+        # TODO: add (everywhere were needed) s3-mlflow-artifacts-path and s3-results-path and pass them as inputs to covid_pred.py
+      s3-mlflow-artifacts-path:
+        description: S3 Bucket/path where your mlflow artifacts (logged models) are stored
+        required: true
+        default: 'mlflow-artifacts-remote-jaime/4'
+        type: string
+      s3-results-path:
+        description: S3 Bucket/path where the result CSVs of the predictions will be stored
+        required: true
+        default: 'covid-predictons-jaime'
+        type: string
       run_id:
         description: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/ 
         required: true
@@ -72,6 +72,8 @@ env:
   PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
   PROV_ST: ${{ github.event.inputs.prov_st }}
   RUN_ID: ${{ github.event.inputs.run_id }}
+  ML_ARTIFACTS: ${{ github.event.inputs.mlflow-artifacts-path }}
+  S3_RESULTS: ${{ github.event.inputs.s3-results-path }}
   CRON_SCH: ${{ github.event.inputs.cron_sch }}
   TIMEZONE: ${{ github.event.inputs.timezone }}
   #TODO: (nice to have) add all the variables used in the template here: exec_role, task_role, stack names, ...
@@ -282,5 +284,5 @@ jobs:
       - name: Upload to S3 - covid_pred.py flow
         working-directory: ./deployment_PrefectFargate
         id: covid_pred 
-        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID  --cron "$CRON_SCH" --timezone "$TIMEZONE" #--interval 120 
+        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID --param mlflow_artifacts_path=$ML_ARTIFACTS --param s3_results_path=$S3_RESULTS --cron "$CRON_SCH" --timezone "$TIMEZONE" #--interval 120 
         #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 

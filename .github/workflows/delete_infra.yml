@@ -33,7 +33,7 @@ env:
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
-  delete-prefect-stack: #TODO: run python files to delete Prefect resources
+  delete-prefect-stack:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
