@@ -50,17 +50,23 @@ jobs:
           pip install prefect==$PREFECT_VERSION
           pip install .
 
-      - name: Delete all Prefect Flows
+      - name: Prefect Cloud login
+        working-directory: ./deployment_PrefectFargate
+        run: |
+          prefect config set PREFECT_API_KEY=${{ secrets.PREFECT_API_KEY }}
+          prefect config set PREFECT_API_URL=${{ secrets.PREFECT_API_URL }}  
+
+      - name: Delete Prefect Flow
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_flows
         run: python delete_prefect_flow.py $FLOW
 
-      - name: Delete all Prefect Deployments
+      - name: Delete Prefect Deployment
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_deployments
         run: python delete_prefect_deployment.py $PROJECT
 
-      - name: Delete all Prefect Blocks
+      - name: Delete Prefect Blocks
         working-directory: ./deployment_PrefectFargate/infrastructure
         id: delete_prefect_blocks
         run: python delete_prefect_blocks.py s3/$BLOCK  ecs-task/$BLOCK aws-credentials/$BLOCK 
