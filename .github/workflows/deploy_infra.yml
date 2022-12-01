@@ -24,11 +24,11 @@ on:
         required: true
         default: 'eu-central-1'
         type: string
-      prefect-version:
-        description: Prefect version for flows
-        required: true
-        default: '2.6.9'
-        type: string
+      # prefect-version:
+      #   description: Prefect version for flows
+      #   required: true
+      #   default: '2.6.9'
+      #   type: string
       prov_st:
         description: City where you want to predict the covid cases
         required: true
@@ -69,7 +69,7 @@ env:
   PROJECT: ${{ github.event.inputs.project_id }}-prj
   BLOCK: ${{ github.event.inputs.project_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
-  PREFECT_VERSION: ${{ github.event.inputs.prefect-version }}
+  PREFECT_VERSION: "2.6.9"
   PROV_ST: ${{ github.event.inputs.prov_st }}
   RUN_ID: ${{ github.event.inputs.run_id }}
   ML_ARTIFACTS: ${{ github.event.inputs.mlflow-artifacts-path }}
