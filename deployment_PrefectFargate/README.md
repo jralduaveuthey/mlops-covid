@@ -1,14 +1,14 @@
 # Goal of this folder
 The goal is to have the same set up (scheduled batch) as in the folder deployment/ but running in on the cloud.
-For that here I will use a Prefect Agent on a container on AWS ECS Fargate.
-A scheduled Deployment in the Prefect Cloud will communicate with the Prefect Agent on the container on AWS.
+For that here I will use a Prefect Agent (running on a container on AWS ECS Fargate).
+A scheduled Deployment in the Prefect Cloud will communicate with the Prefect Agent on the container on AWS. The Deployment will run in an independent ECS Task.
 
 # Python Script 
-Here the script deployment_docker/covid_pred.py is a copy of deployment/inbetween_nb.py. Same applies to the files deployment.yaml and covid_prediction-manifest.json.
+Here the script deployment_PrefectFargate\covid_pred.py is a copy of deployment\inbetween_nb.py. With some changes to be able to pass information via Github input.
 
 
 # Prefect Cloud
-To run the Deployments I will use the Prefect Cloud following the instructions here: https://docs.prefect.io/ui/cloud-getting-started/
+To run the Deployments I will use the Prefect Cloud following the instructions [here.](https://docs.prefect.io/ui/cloud-getting-started/)
 To know more in detail check the folder deployment_PrefectDockerAgent/cloud-getting-started
 
 # Login in Cloud and set workspace
@@ -20,11 +20,12 @@ To sync a local execution environment with the workspace prefect cloud workspace
 ```
 prefect cloud workspace set --workspace "jaimerv/workinonit"
 ```
-"jaimerv/workinonit" is the name of my workspace in my Prefect Cloud account, so you will need to pass here the name of the workspace you created in your account.
+"jaimerv/workinonit" is the name of my workspace in my Prefect Cloud account, so you will need to pass here the name of the workspace you created in your account.  
+Note: this commands might change depending on the Prefect version you are using.
 
 
 # Deploy Infrastructure
-Before running the Github action (called "DEPLOY ECS Cluster, Prefect agent ECS service and ECR repository") on the browser, you have to enter some Github Secrets and Inputs for the action to work.
+Before running the Github action (called "DEPLOY Infrastructure") on the browser, you have to enter some Github Secrets and Inputs for the action to work.
 
 ## Github necessary secrets 
 - AWS_ACCESS_KEY_ID: You can see how to obtain one [here.](https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html)
@@ -39,8 +40,9 @@ The inputs for the Github action are the following:
 - memory: Memory for the agent. The default is '1024' but you can choose between the following ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
 - project_id: Unique ID of your project that will be used for the name of the Prefect blocks, ...
 - aws-region: the AWS Region where your resources will be deployed
-- prefect-version: Prefect version to use for flows. Default version is '2.6.9' but it should work with any 2.* Prefect version
 - prov_st: City where you want to predict the covid cases
+- s3-mlflow-artifacts-path: S3 Bucket/path where your mlflow artifacts (logged models) are stored
+- s3-results-path: S3 Bucket/path where the result CSVs of the predictions will be stored
 - run_id: run_id from the model to use in the S3 bucket mlflow-artifacts-remote-jaime/4/. This is my 
 - cron_sch: Cron schedule to use in the deployment
 - timezone: Timezone to use in the cron schedule 
@@ -57,7 +59,8 @@ Then it creates a deployment definition (yaml) file, that will be updloaded to t
 >>TODO: check if the following is true: The manifest json file and the python script with the code will be retrieved from this S3 bucket when creating the Deployment and everytime the Deployment runs.
 
 ## See the results in the Prefect Cloud
-In your browser you can go to the [Prefect Cloud](https://app.prefect.cloud/) and see your new Flow Runs, Blocks, Work Queue, ... For the Flow Runs you can also see the Logs that were defined in _deployment_PrefectFargate\covid_pred.py_. More info about the Prefect Cloud and how to operate with it can be found [here.](https://docs.prefect.io/ui/overview/)
+In your browser you can go to the [Prefect Cloud](https://app.prefect.cloud/) and see your new Flow Runs, Blocks, Work Queue, ...   
+For the Flow Runs you can also see the Logs that were defined in _deployment_PrefectFargate\covid_pred.py_. More info about the Prefect Cloud and how to operate with it can be found [here.](https://docs.prefect.io/ui/overview/)
 
 
 # Continuous deployment
@@ -71,8 +74,8 @@ Possible changes that you might wish to do include:
 - ...
 
 
-At the moment the Github action is defined to be triggered on workflow_dispatch so it is easier to play with it but to use it as real CD pipeline one would only have to stop passing the parameters as Github action inputs and change the trigger. For more detailed information see [here.](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events)
+At the moment the Github action is defined to be triggered on _workflow_dispatch_ so it is easier to play with it but to use it as real CD pipeline one would only have to stop passing the parameters as Github action inputs and change the trigger. For more detailed information see [here.](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#available-events)
 
 
 # Destroy AWS Resources
-To delete all your AWS resources just use the Github action "DELETE All AWS Resources" (._github\workflows\delete_all_aws_resources.yml_)
+To delete all your AWS resources just use the Github action "DELETE All AWS Resources" ( see code under _.github\workflows\delete_all_aws_resources.yml_)

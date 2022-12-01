@@ -12,17 +12,11 @@ on:
         required: true
         default: 'eu-central-1'
         type: string
-      # prefect-version:
-      #   description: Prefect version for flows
-      #   required: true
-      #   default: '2.6.9'
-      #   type: string
       prov_st:
         description: City where you want to predict the covid cases
         required: true
         default: 'Madrid'
         type: string
-        # TODO: add (everywhere were needed) s3-mlflow-artifacts-path and s3-results-path and pass them as inputs to covid_pred.py
       s3-mlflow-artifacts-path:
         description: S3 Bucket/path where your mlflow artifacts (logged models) are stored
         required: true

@@ -115,6 +115,7 @@ def apply_model_today_Province_State(run_id, output_file,Province_State, mlflow_
     df = get_data_last_days(1) #Get data from yesterday
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Loading the model with RUN_ID={run_id}...')
+    logger.info(f'>>>>>>> TODO DELETEME mlflow_artifacts_path={mlflow_artifacts_path}...')
     model = load_model(run_id,mlflow_artifacts_path)
 
     logger.info(f'>>>>>>>>>>>>>>>>>> Applying the model...')
@@ -138,6 +139,8 @@ def get_output_path(Province_State, run_id, s3_results_path):
     year = run_date.year
     month = run_date.month
     day = run_date.day
+    logger = get_run_logger()
+    logger.info(f'>>>>>>> TODO DELETEME s3_results_path={s3_results_path}...')
     output_file = f's3://{s3_results_path}/{Province_State}_predictons_{year:04d}-{month:02d}-{day:02d}/{run_id}.csv'
     return output_file
 
