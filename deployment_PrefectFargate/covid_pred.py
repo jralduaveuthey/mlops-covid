@@ -140,7 +140,6 @@ def get_output_path(Province_State, run_id, s3_results_path):
     month = run_date.month
     day = run_date.day
     logger = get_run_logger()
-    logger.info(f'>>>>>>> TODO DELETEME s3_results_path={s3_results_path}...')
     output_file = f's3://{s3_results_path}/{Province_State}_predictons_{year:04d}-{month:02d}-{day:02d}/{run_id}.csv'
     return output_file
 
