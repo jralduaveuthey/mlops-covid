@@ -247,7 +247,7 @@ jobs:
           key_ = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           s3path_ = "${{ env.S3_BUCKET }}" 
           img_ = "${{ needs.ecr-repo.outputs.image }}"
-          block_ = "$BLOCK"
+          block_ = "${{ env.BLOCK }}"
           cluster_ = "${{ env.ECS_CLUSTER }}"
           cpu_ = "${{ github.event.inputs.cpu }}"
           memory_ = "${{ github.event.inputs.memory }}"

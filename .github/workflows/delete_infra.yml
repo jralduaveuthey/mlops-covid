@@ -19,16 +19,41 @@ env:
   ECR_REPO: ${{ github.event.inputs.project_id }}-ecr
   ECS_CLUSTER: ${{ github.event.inputs.project_id }}-ecs 
   S3_BUCKET: ${{ github.event.inputs.project_id }}-s3
+  BLOCK: ${{ github.event.inputs.project_id }}-blk
   AWS_REGION: ${{ github.event.inputs.aws-region }}
 
 jobs:
   delete-prefect-stack: #TODO: run python files to delete Prefect resources
-        - name: Upload to S3 - covid_pred.py flow
-        working-directory: ./deployment_PrefectFargate
-        id: covid_pred 
-        run: prefect deployment build ./covid_pred.py:covid_prediction -n $PROJECT -sb s3/$BLOCK -q $PROJECT -v $GITHUB_SHA -a -t tag_CovidPrev_Fargate --param Prov_St=$PROV_ST --param run_id=$RUN_ID  --cron "$CRON_SCH" --timezone "$TIMEZONE" #--interval 120 
-        #NOTE: this deployment is going to run as independent ECS Task, independent from the ECS Task where the Prefect Agent ist (as explained in Anna's tutorial linked in my CUTask 34aghxe) 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Python dependencies
+        working-directory: ./deployment_PrefectFargate
+        run: |
+          pip install prefect==$PREFECT_VERSION
+          pip install .
+
+      - name: Delete all Prefect Flows
+        working-directory: ./deployment_PrefectFargate/infrastructure
+        id: delete_prefect_flows
+        run: python ./delete_all_prefect_flows.py 
+
+      - name: Delete all Prefect Deployments
+        working-directory: ./deployment_PrefectFargate/infrastructure
+        id: delete_prefect_deployments
+        run: python ./delete_all_prefect_deployments.py 
+
+      - name: Delete all Prefect Blocks
+        working-directory: ./deployment_PrefectFargate/infrastructure
+        id: delete_prefect_blocks
+        run: python ./delete_all_prefect_blocks.py s3/$BLOCK  ecs-task/$BLOCK aws-credentials/$BLOCK 
 
   delete-aws-stack:
     runs-on: ubuntu-latest
