@@ -1,0 +1,105 @@
+name: Deploy MLFlow Service to AWS ECS
+#TODO: change this so the inputs and the rest is consistent with my project
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
+        required: true
+        default: '34aghxe'
+      service_name:
+        description: Name of the service
+        required: true
+        default: 'mlflow-server'
+      template_path:
+        description: Cloudformation template for mlflow deployment
+        required: true
+        default: exp-track-mod-reg-mlflowFargate/infrastructure/ecs_cluster_mlflow_service.yml
+
+env:
+  AWS_REGION: eu-central-1
+  DOCKER_PATH: ./experiment_tracking/
+  ECR_REPOSITORY: "${{ github.event.inputs.service_name }}"
+
+jobs:
+  ecr-repo:
+    name: Create ECR repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Create new ECR repository using AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: "${{ github.event.inputs.service_name }}-ecr"
+          template: infrastructure/templates/create_ecr_repository.yml
+          parameter-overrides: "RepositoryName=${{ github.event.inputs.service_name }}"
+          no-fail-on-empty-changeset: "1"
+      - name: Job is finished.
+        run: echo "ECR repository built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: Push service image to ECR repository
+    runs-on: ubuntu-latest
+    needs: ecr-repo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build image and push image to ECR with latest tag
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY $DOCKER_PATH
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY
+
+          # Tag image with the Git-Sha and Push again
+          docker tag  $ECR_REGISTRY/$ECR_REPOSITORY $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: ECR image is being pushed to corresponding repository
+        run: echo "ECR image ${{ steps.build-image.outputs.image }} built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy to ECS with AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: "${{ github.event.inputs.service_name }}"
+          template: "${{ github.event.inputs.template_path }}"
+          capabilities: CAPABILITY_NAMED_IAM
+          parameter-overrides: "ProjectName=${{ github.event.inputs.project_id }},ServiceName=${{ github.event.inputs.service_name }},ServiceImage=${{ steps.build-image.outputs.image }}"
+
+      - name: ECS Service Deployment finished
+        run: echo "ECS Service Deployment finished at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate task definition
+        run: aws ecs describe-task-definition --task-definition ${{ github.event.inputs.service_name }} --query taskDefinition > task-definition.json
+
+      - name: Upload task definition as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ECS task definition
+          path: task-definition.json
+
+      - name: Summary
+        run: echo 'AWS ECS agent successfully deployed and ready to run your flows! :rocket:' >> $GITHUB_STEP_SUMMARY

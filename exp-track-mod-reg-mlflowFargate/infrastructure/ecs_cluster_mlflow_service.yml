@@ -1,0 +1,714 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >
+  Creates a new AWS VPC and a new ECS Cluster. It then deploys an ECS task definition and ECS service
+  running the MLFlow server in a subnet created within that VPC.
+  The service can then be used as experiment tracking layer for MLOps pipelines
+Parameters:
+  ProjectName:
+    Type: String
+    Default: mlops-zoomcamp-capstone
+  ServiceName:
+    Type: String
+    Default: mlflow-server
+  ServiceImage:
+    Type: String
+    Description: Docker image for the service
+Resources:
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}_ecs_task_role"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/AmazonS3FullAccess
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/AmazonECS_FullAccess
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      GenerateSecretString:
+        ExcludePunctuation: true
+        PasswordLength: 20
+      Name: dbPassword
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  MLFLowVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default # todo?
+  VPCPublicSubnet1Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: "" # Fn::GetAZs: { Ref: 'AWS::Region' }
+      CidrBlock: 10.0.0.0/28
+      MapPublicIpOnLaunch: true
+  VPCPublicSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PublicSubnet1
+
+  VPCPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCPublicSubnet1RouteTable
+      SubnetId:
+        Ref: VPCPublicSubnet1Subnet
+  VPCPublicSubnet1DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: VPCPublicSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: VPCInternetGateaway
+    DependsOn:
+      - VPCGateawayAttachement
+  VPCPublicSubnet1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PublicSubnet1
+  VPCPublicSubnet1NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId:
+        Ref: VPCPublicSubnet1Subnet
+      AllocationId:
+        Fn::GetAtt:
+          - VPCPublicSubnet1
+          - AllocationId
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PublicSubnet1
+    DependsOn:
+      - VPCPublicSubnet1DefaultRoute
+      - VPCPublicSubnet1RouteTableAssociation
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PublicSubnet1/NATGateway
+  VPCPublicSubnet2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: 10.0.0.16/28
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: DeploymentStack/VPC/PublicSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/Subnet
+  VPCPublicSubnet2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PublicSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/RouteTable
+  VPCPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCPublicSubnet2RouteTable
+      SubnetId:
+        Ref: VPCPublicSubnet2Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/RouteTableAssociation
+  VPCPublicSubnet2DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: VPCPublicSubnet2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: VPCInternetGateaway
+    DependsOn:
+      - VPCGateawayAttachement
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/DefaultRoute
+  VPCPrivateSubnet1Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: 10.0.0.32/28
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: DeploymentStack/VPC/PrivateSubnet1
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/Subnet
+  VPCPrivateSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PrivateSubnet1
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/RouteTable
+  VPCPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCPrivateSubnet1RouteTable
+      SubnetId:
+        Ref: VPCPrivateSubnet1Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/RouteTableAssociation
+  VPCPrivateSubnet1DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: VPCPrivateSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: VPCPublicSubnet1NATGateway
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/DefaultRoute
+  VPCPrivateSubnet2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: 10.0.0.48/28
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: DeploymentStack/VPC/PrivateSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/Subnet
+  VPCPrivateSubnet2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/PrivateSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/RouteTable
+  VPCPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCPrivateSubnet2RouteTable
+      SubnetId:
+        Ref: VPCPrivateSubnet2Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/RouteTableAssociation
+  VPCPrivateSubnet2DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: VPCPrivateSubnet2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: VPCPublicSubnet1NATGateway
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/DefaultRoute
+  VPCDBSubnet1Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: 10.0.0.64/28
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: DB
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: DeploymentStack/VPC/DBSubnet1
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet1/Subnet
+  VPCDBSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/DBSubnet1
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet1/RouteTable
+  VPCDBSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCDBSubnet1RouteTable
+      SubnetId:
+        Ref: VPCDBSubnet1Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet1/RouteTableAssociation
+  VPCDBSubnet2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: 10.0.0.80/28
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: DB
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: DeploymentStack/VPC/DBSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet2/Subnet
+  VPCDBSubnet2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC/DBSubnet2
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet2/RouteTable
+  VPCDBSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: VPCDBSubnet2RouteTable
+      SubnetId:
+        Ref: VPCDBSubnet2Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/DBSubnet2/RouteTableAssociation
+  VPCInternetGateaway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/VPC
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/IGW
+  VPCGateawayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: MLFLowVPC
+      InternetGatewayId:
+        Ref: VPCInternetGateaway
+    Metadata:
+      aws:cdk:path: DeploymentStack/VPC/VPCGW
+  VPCS3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName:
+        Fn::Join:
+          - ""
+          - - com.amazonaws.
+            - Ref: AWS::Region
+            - .s3
+      VpcId:
+        Ref: MLFLowVPC
+      RouteTableIds:
+        - Ref: VPCPrivateSubnet1RouteTable
+        - Ref: VPCPrivateSubnet2RouteTable
+        - Ref: VPCPublicSubnet1RouteTable
+        - Ref: VPCPublicSubnet2RouteTable
+        - Ref: VPCDBSubnet1RouteTable
+        - Ref: VPCDBSubnet2RouteTable
+      VpcEndpointType: Gateway
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      # BucketName: !Sub ${ProjectName}-${ServiceName}-artifacts
+      BucketName:
+        Fn::Join:
+          - ""
+          - - Ref: ProjectName
+            - "-"
+            - Ref: ServiceName
+            - "-artifacts-"
+            - Ref: AWS::AccountId
+    UpdateReplacePolicy: Retain
+    # DeletionPolicy: Retain
+  SecurityGroupRDS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MLFlow RDS Security Group
+      GroupName: sg_rds
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: 10.0.0.0/24
+          Description: from 10.0.0.0/24:3306
+          FromPort: 3306
+          IpProtocol: tcp
+          ToPort: 3306
+      VpcId:
+        Ref: MLFLowVPC
+    Metadata:
+      aws:cdk:path: DeploymentStack/SecurityGroupRDS/Resource
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for MYSQL database
+      SubnetIds:
+        - Ref: VPCDBSubnet1Subnet
+        - Ref: VPCDBSubnet2Subnet
+    Metadata:
+      aws:cdk:path: DeploymentStack/MYSQL/SubnetGroup/Default
+  RDSDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: "100"
+      CopyTagsToSnapshot: true
+      DBInstanceClass: db.t2.small
+      DBName: mlflowdb
+      DBSubnetGroupName:
+        Ref: RDSSubnetGroup
+      DeletionProtection: false
+      Engine: mysql
+      EngineVersion: 8.0.26
+      MasterUsername: master
+      MasterUserPassword:
+        Fn::Join:
+          - ""
+          - - "{{resolve:secretsmanager:"
+            - Ref: DBSecret
+            - :SecretString:::}}
+      Port: "3306"
+      PubliclyAccessible: false
+      StorageType: gp2
+      VPCSecurityGroups:
+        - Fn::GetAtt:
+            - SecurityGroupRDS
+            - GroupId
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: DeploymentStack/MYSQL/Resource
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: mlflow
+    Metadata:
+      aws:cdk:path: DeploymentStack/CLUSTER/Resource
+  MLflowTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      ContainerDefinitions:
+        - Environment:
+            - Name: MLFLOW_ARTIFACT_URI
+              Value:
+                Fn::Join:
+                  - ""
+                  - - s3://
+                    - Ref: ArtifactBucket
+            - Name: MLFLOW_DB_HOST
+              Value:
+                Fn::GetAtt:
+                  - RDSDBInstance
+                  - Endpoint.Address
+            - Name: MLFLOW_DB_PORT
+              Value: "3306"
+            - Name: MLFLOW_DB_DATABASE
+              Value: mlflowdb
+            - Name: MLFLOW_DB_USERNAME
+              Value: master
+          Essential: true
+          Image: !Sub "${ServiceImage}"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Ref: MLflowContainerLogGroup
+              awslogs-stream-prefix: mlflow
+              awslogs-region:
+                Ref: AWS::Region
+          Name: Container
+          PortMappings:
+            - ContainerPort: 5000
+              HostPort: 5000
+              Protocol: tcp
+          Secrets:
+            - Name: MLFLOW_DB_PASSWORD
+              ValueFrom:
+                Ref: DBSecret
+      Cpu: "256"
+      ExecutionRoleArn:
+        Fn::GetAtt:
+          - MLflowExecutionRole
+          - Arn
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn:
+        Fn::GetAtt:
+          - TaskRole
+          - Arn
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLflow/Resource
+  MLflowContainerLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLflow/Container/LogGroup/Resource
+  MLflowExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLflow/ExecutionRole/Resource
+  MLflowExecutionRoleDefaultPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+            Effect: Allow
+            Resource: "*"
+          - Action: ecr:GetAuthorizationToken
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - MLflowContainerLogGroup
+                - Arn
+          - Action:
+              - secretsmanager:GetSecretValue
+              - secretsmanager:DescribeSecret
+            Effect: Allow
+            Resource:
+              Ref: DBSecret
+        Version: "2012-10-17"
+      PolicyName: MLflowExecutionRoleDefaultPolicy
+      Roles:
+        - Ref: MLflowExecutionRole
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLflow/ExecutionRole/DefaultPolicy/Resource
+  MLFlowNetworkLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: "false"
+      Scheme: internet-facing
+      Subnets:
+        - Ref: VPCPublicSubnet1Subnet
+        - Ref: VPCPublicSubnet2Subnet
+      Type: network
+    DependsOn:
+      - VPCPublicSubnet1DefaultRoute
+      - VPCPublicSubnet1RouteTableAssociation
+      - VPCPublicSubnet2DefaultRoute
+      - VPCPublicSubnet2RouteTableAssociation
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/LB/Resource
+  MLFlowLBPublicListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: MLFlowLBPublicListenerTargetGroup
+          Type: forward
+      LoadBalancerArn:
+        Ref: MLFlowNetworkLoadBalancer
+      Port: 80
+      Protocol: TCP
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/LB/PublicListener/Resource
+  MLFlowLBPublicListenerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 80
+      Protocol: TCP
+      TargetType: ip
+      VpcId:
+        Ref: MLFLowVPC
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/LB/PublicListener/ECSGroup/Resource
+  MLFlowService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Ref: ECSCluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      EnableECSManagedTags: false
+      HealthCheckGracePeriodSeconds: 60
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: Container
+          ContainerPort: 5000
+          TargetGroupArn:
+            Ref: MLFlowLBPublicListenerTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - Fn::GetAtt:
+                - MLFlowServiceSecurityGroup
+                - GroupId
+          Subnets:
+            - Ref: VPCPrivateSubnet1Subnet
+            - Ref: VPCPrivateSubnet2Subnet
+      ServiceName: mlflow
+      TaskDefinition:
+        Ref: MLflowTaskDefinition
+    DependsOn:
+      - MLFlowLBPublicListenerTargetGroup
+      - MLFlowLBPublicListener
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/Service/Service
+  MLFlowServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MLFlow Service Security Group
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp:
+            Fn::GetAtt:
+              - MLFLowVPC
+              - CidrBlock
+          Description: Allow inbound from VPC for mlflow
+          FromPort: 5000
+          IpProtocol: tcp
+          ToPort: 5000
+      VpcId:
+        Ref: MLFLowVPC
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/Service/SecurityGroup/Resource
+  MLFlowServiceTaskCountTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2
+      MinCapacity: 1
+      ResourceId:
+        Fn::Join:
+          - ""
+          - - service/
+            - Ref: ECSCluster
+            - /
+            - Fn::GetAtt:
+                - MLFlowService
+                - Name
+      RoleARN:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":iam::"
+            - Ref: AWS::AccountId
+            - :role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/Service/TaskCount/Target/Resource
+  MLFlowServiceTaskCountAutoscalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: MLFlowServiceTaskCountTargetAutoscaling
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId:
+        Ref: MLFlowServiceTaskCountTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        TargetValue: 70
+    Metadata:
+      aws:cdk:path: DeploymentStack/MLFLOW/Service/TaskCount/Target/AUTOSCALING/Resource
+Outputs:
+  MLFlowLoadBalancer:
+    Value:
+      Fn::GetAtt:
+        - MLFlowNetworkLoadBalancer
+        - DNSName
+  NetworkLoadBalancerDNS:
+    Value:
+      Fn::GetAtt:
+        - MLFlowNetworkLoadBalancer
+        - DNSName

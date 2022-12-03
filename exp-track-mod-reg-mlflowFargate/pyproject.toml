@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "experiment-tracking-module-fargate"
+version = "0.1.0"
+description = "description here"
+authors = ["xxx"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+mlflow = "^2.0.1"
+boto3 = "^1.24.64"
+PyMySQL = "^1.0.2"
+
+
+[tool.poetry.dev-dependencies]
+python-dotenv = "^0.20.0"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+default_section = "THIRDPARTY"
+profile = "black"
+sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
