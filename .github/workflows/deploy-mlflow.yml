@@ -38,7 +38,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: "${{ github.event.inputs.service_name }}-ecr"
-          template: infrastructure/templates/create_ecr_repository.yml
+          template: exp-track-mod-reg-mlflowFargate/infrastructure/create_ecr_repository.yml #TODO: change this?
           parameter-overrides: "RepositoryName=${{ github.event.inputs.service_name }}"
           no-fail-on-empty-changeset: "1"
       - name: Job is finished.
