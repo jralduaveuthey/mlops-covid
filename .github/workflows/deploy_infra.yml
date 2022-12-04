@@ -1,4 +1,4 @@
-name: DEPLOY Infrastructure
+name: (V2) DEPLOY Infrastructure
 
 on:
   workflow_dispatch:

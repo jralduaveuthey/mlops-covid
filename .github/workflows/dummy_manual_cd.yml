@@ -1,4 +1,4 @@
-name: Dummy CD-Create Deployments
+name: (V1) Dummy CD-Create Deployments
 on:
   workflow_dispatch:
 #   push:

@@ -1,4 +1,4 @@
-name: DELETE Infrastructure
+name: (V2) DELETE Infrastructure
 on:
   workflow_dispatch:
     inputs:

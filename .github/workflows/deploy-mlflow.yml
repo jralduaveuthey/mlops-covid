@@ -1,4 +1,4 @@
-name: Deploy MLFlow Service to AWS ECS
+name: (V2) Deploy MLFlow Service to AWS ECS
 #TODO: change this so the inputs and the rest is consistent with my project
 on:
   workflow_dispatch:
@@ -11,15 +11,11 @@ on:
         description: Name of the service
         required: true
         default: 'mlflow-server'
-      template_path:
-        description: Cloudformation template for mlflow deployment
-        required: true
-        default: exp-track-mod-reg-mlflowFargate/infrastructure/ecs_cluster_mlflow_service.yml
-
+        
 env:
   AWS_REGION: eu-central-1
   DOCKER_PATH: ./exp-track-mod-reg-mlflowFargate/
-  ECR_REPOSITORY: "${{ github.event.inputs.service_name }}"
+  ECR_REPO: ${{ github.event.inputs.project_id }}-mlflow-ecr
 
 jobs:
   ecr-repo:
@@ -34,15 +30,18 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Create new ECR repository using AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "${{ github.event.inputs.service_name }}-ecr"
-          template: exp-track-mod-reg-mlflowFargate/infrastructure/create_ecr_repository.yml #TODO: change this?
-          parameter-overrides: "RepositoryName=${{ github.event.inputs.service_name }}"
+          name: "ecr-stack-${{ env.PROJECT_ID }}"
+          template: deployment_PrefectFargate/infrastructure/ecr_repository.yml
+          parameter-overrides: "ECRREPO=${{ env.ECR_REPO }}"
           no-fail-on-empty-changeset: "1"
+
       - name: Job is finished.
         run: echo "ECR repository built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
 
   deploy:
     name: Push service image to ECR repository
@@ -70,13 +69,13 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build image and push image to ECR with latest tag
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY $DOCKER_PATH
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker build -t $ECR_REGISTRY/$ECR_REPO $DOCKER_PATH
+          docker push $ECR_REGISTRY/$ECR_REPO
 
           # Tag image with the Git-Sha and Push again
-          docker tag  $ECR_REGISTRY/$ECR_REPOSITORY $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker tag  $ECR_REGISTRY/$ECR_REPO $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
 
       - name: ECR image is being pushed to corresponding repository
         run: echo "ECR image ${{ steps.build-image.outputs.image }} built at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
@@ -85,7 +84,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: "${{ github.event.inputs.service_name }}"
-          template: "${{ github.event.inputs.template_path }}"
+          template: exp-track-mod-reg-mlflowFargate/infrastructure/ecs_cluster_mlflow_service.yml
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: "ProjectName=${{ github.event.inputs.project_id }},ServiceName=${{ github.event.inputs.service_name }},ServiceImage=${{ steps.build-image.outputs.image }}"
 

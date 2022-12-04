@@ -1,5 +1,5 @@
 
-name: Dummy manual CI
+name: (V1) Dummy manual CI
 on:
   workflow_dispatch:
 
