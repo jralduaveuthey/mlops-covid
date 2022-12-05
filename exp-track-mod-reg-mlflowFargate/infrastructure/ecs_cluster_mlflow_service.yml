@@ -5,9 +5,9 @@ Description: >
   running the MLFlow server in a subnet created within that VPC.
   The service can then be used as experiment tracking layer for MLOps pipelines
 Parameters:
-  ProjectName:
+  PROJECT_ID:
     Type: String
-    Default: mlops-zoomcamp-capstone
+    Default: cutaskid
   ServiceName:
     Type: String
     Default: mlflow-server
@@ -52,12 +52,15 @@ Resources:
       CidrBlock: 10.0.0.0/24
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      InstanceTenancy: default # todo?
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: DeploymentStack/MLFLowVPC
   VPCPublicSubnet1Subnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -67,14 +70,18 @@ Resources:
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
   VPCPublicSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
   VPCPublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -99,6 +106,8 @@ Resources:
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
   VPCPublicSubnet1NATGateway:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -111,6 +120,8 @@ Resources:
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     DependsOn:
       - VPCPublicSubnet1DefaultRoute
       - VPCPublicSubnet1RouteTableAssociation
@@ -120,7 +131,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -134,16 +145,20 @@ Resources:
           Value: Public
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/Subnet
   VPCPublicSubnet2RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/RouteTable
   VPCPublicSubnet2RouteTableAssociation:
@@ -171,7 +186,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -185,16 +200,20 @@ Resources:
           Value: Private
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/Subnet
   VPCPrivateSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/RouteTable
   VPCPrivateSubnet1RouteTableAssociation:
@@ -220,7 +239,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -234,16 +253,20 @@ Resources:
           Value: Private
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/Subnet
   VPCPrivateSubnet2RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/RouteTable
   VPCPrivateSubnet2RouteTableAssociation:
@@ -269,7 +292,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -283,16 +306,20 @@ Resources:
           Value: Isolated
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet1/Subnet
   VPCDBSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet1
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet1/RouteTable
   VPCDBSubnet1RouteTableAssociation:
@@ -308,7 +335,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -322,16 +349,20 @@ Resources:
           Value: Isolated
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet2/Subnet
   VPCDBSubnet2RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       Tags:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet2
+        - Key: CU_Task
+          Value: !Ref PROJECT_ID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet2/RouteTable
   VPCDBSubnet2RouteTableAssociation:
@@ -355,7 +386,7 @@ Resources:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       InternetGatewayId:
         Ref: VPCInternetGateaway
     Metadata:
@@ -370,7 +401,7 @@ Resources:
             - Ref: AWS::Region
             - .s3
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
       RouteTableIds:
         - Ref: VPCPrivateSubnet1RouteTable
         - Ref: VPCPrivateSubnet2RouteTable
@@ -382,11 +413,10 @@ Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
     Properties:
-      # BucketName: !Sub ${ProjectName}-${ServiceName}-artifacts
       BucketName:
         Fn::Join:
           - ""
-          - - Ref: ProjectName
+          - - Ref: PROJECT_ID
             - "-"
             - Ref: ServiceName
             - "-artifacts-"
@@ -409,7 +439,7 @@ Resources:
           IpProtocol: tcp
           ToPort: 3306
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
     Metadata:
       aws:cdk:path: DeploymentStack/SecurityGroupRDS/Resource
   RDSSubnetGroup:
@@ -604,7 +634,7 @@ Resources:
       Protocol: TCP
       TargetType: ip
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
     Metadata:
       aws:cdk:path: DeploymentStack/MLFLOW/LB/PublicListener/ECSGroup/Resource
   MLFlowService:
@@ -659,7 +689,7 @@ Resources:
           IpProtocol: tcp
           ToPort: 5000
       VpcId:
-        Ref: MLFLowVPC
+        !Ref MLFLowVPC
     Metadata:
       aws:cdk:path: DeploymentStack/MLFLOW/Service/SecurityGroup/Resource
   MLFlowServiceTaskCountTarget:

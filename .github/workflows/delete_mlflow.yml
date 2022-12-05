@@ -1,0 +1,55 @@
+name: (V2) Deploy MLFlow Service Infrastructure
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: Project ID (For the name of the Prefect blocks, ...) #NOTE: It can be the CU Task ID
+        required: true
+        default: '34aghxe'
+      service_name:
+        description: Name of the service
+        required: true
+        default: 'mlflow-server'
+      aws-region:
+        description: AWS Region
+        required: true
+        default: 'eu-central-1'
+        type: string
+
+env:
+  PROJECT_ID: ${{ github.event.inputs.project_id }}
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
+  DOCKER_PATH: ./exp-track-mod-reg-mlflowFargate/
+  ECR_REPO: ${{ github.event.inputs.project_id }}-mlflow-ecr
+
+jobs:
+
+  delete-aws-stack:
+    runs-on: ubuntu-latest
+    needs: delete-prefect-stack
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete ECR repository
+        continue-on-error: true
+        run: |
+          aws ecr delete-repository --repository-name ${{ env.ECR_REPO }} --force
+          aws cloudformation delete-stack --stack-name "ecr-stack-${{ env.PROJECT_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecr-stack-${{ env.PROJECT_ID }}"
+
+      - name: Delete ECS agent service
+        continue-on-error: true
+        run: |
+          aws cloudformation delete-stack --stack-name "ecs-stack-${{ env.PROJECT_ID }}"
+          aws cloudformation wait stack-delete-complete --stack-name "ecs-stack-${{ env.PROJECT_ID }}"
+
+      - name: All AWS resources deleted
+        run: echo '### All AWS resources deleted! :tada:' >> $GITHUB_STEP_SUMMARY

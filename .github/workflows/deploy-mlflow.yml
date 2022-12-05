@@ -1,5 +1,4 @@
-name: (V2) Deploy MLFlow Service to AWS ECS
-#TODO: change this so the inputs and the rest is consistent with my project
+name: (V2) Deploy MLFlow Service Infrastructure
 on:
   workflow_dispatch:
     inputs:
@@ -11,9 +10,16 @@ on:
         description: Name of the service
         required: true
         default: 'mlflow-server'
+      aws-region:
+        description: AWS Region
+        required: true
+        default: 'eu-central-1'
+        type: string
         
 env:
-  AWS_REGION: eu-central-1
+  SERVICE: mlflow-server
+  PROJECT_ID: ${{ github.event.inputs.project_id }}
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
   DOCKER_PATH: ./exp-track-mod-reg-mlflowFargate/
   ECR_REPO: ${{ github.event.inputs.project_id }}-mlflow-ecr
 
@@ -83,16 +89,16 @@ jobs:
       - name: Deploy to ECS with AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: "${{ github.event.inputs.service_name }}"
+          name: "ecs-stack-${{ env.PROJECT_ID }}"
           template: exp-track-mod-reg-mlflowFargate/infrastructure/ecs_cluster_mlflow_service.yml
           capabilities: CAPABILITY_NAMED_IAM
-          parameter-overrides: "ProjectName=${{ github.event.inputs.project_id }},ServiceName=${{ github.event.inputs.service_name }},ServiceImage=${{ steps.build-image.outputs.image }}"
+          parameter-overrides: "PROJECT_ID=${{ env.PROJECT_ID }},ServiceName=${{ env.SERVICE }},ServiceImage=${{ steps.build-image.outputs.image }}"
 
       - name: ECS Service Deployment finished
         run: echo "ECS Service Deployment finished at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
 
       - name: Generate task definition
-        run: aws ecs describe-task-definition --task-definition ${{ github.event.inputs.service_name }} --query taskDefinition > task-definition.json
+        run: aws ecs describe-task-definition --task-definition ${{ env.SERVICE }} --query taskDefinition > task-definition.json
 
       - name: Upload task definition as artifact
         uses: actions/upload-artifact@v3
