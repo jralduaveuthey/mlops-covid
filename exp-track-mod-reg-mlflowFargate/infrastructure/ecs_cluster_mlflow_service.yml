@@ -5,7 +5,7 @@ Description: >
   running the MLFlow server in a subnet created within that VPC.
   The service can then be used as experiment tracking layer for MLOps pipelines
 Parameters:
-  PROJECT_ID:
+  ProjectID:
     Type: String
     Default: cutaskid
   ServiceName:
@@ -71,7 +71,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
   VPCPublicSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -81,7 +81,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
   VPCPublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -107,7 +107,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
   VPCPublicSubnet1NATGateway:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -121,7 +121,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     DependsOn:
       - VPCPublicSubnet1DefaultRoute
       - VPCPublicSubnet1RouteTableAssociation
@@ -146,7 +146,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/Subnet
   VPCPublicSubnet2RouteTable:
@@ -158,7 +158,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PublicSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PublicSubnet2/RouteTable
   VPCPublicSubnet2RouteTableAssociation:
@@ -201,7 +201,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/Subnet
   VPCPrivateSubnet1RouteTable:
@@ -213,7 +213,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet1/RouteTable
   VPCPrivateSubnet1RouteTableAssociation:
@@ -254,7 +254,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/Subnet
   VPCPrivateSubnet2RouteTable:
@@ -266,7 +266,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/PrivateSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/PrivateSubnet2/RouteTable
   VPCPrivateSubnet2RouteTableAssociation:
@@ -307,7 +307,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet1/Subnet
   VPCDBSubnet1RouteTable:
@@ -319,7 +319,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet1
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet1/RouteTable
   VPCDBSubnet1RouteTableAssociation:
@@ -350,7 +350,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet2/Subnet
   VPCDBSubnet2RouteTable:
@@ -362,7 +362,7 @@ Resources:
         - Key: Name
           Value: DeploymentStack/VPC/DBSubnet2
         - Key: CU_Task
-          Value: !Ref PROJECT_ID
+          Value: !Ref ProjectID
     Metadata:
       aws:cdk:path: DeploymentStack/VPC/DBSubnet2/RouteTable
   VPCDBSubnet2RouteTableAssociation:
@@ -416,7 +416,7 @@ Resources:
       BucketName:
         Fn::Join:
           - ""
-          - - Ref: PROJECT_ID
+          - - Ref: ProjectID
             - "-"
             - Ref: ServiceName
             - "-artifacts-"

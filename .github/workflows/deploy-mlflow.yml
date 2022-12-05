@@ -92,7 +92,7 @@ jobs:
           name: "ecs-stack-${{ env.PROJECT_ID }}"
           template: exp-track-mod-reg-mlflowFargate/infrastructure/ecs_cluster_mlflow_service.yml
           capabilities: CAPABILITY_NAMED_IAM
-          parameter-overrides: "PROJECT_ID=${{ env.PROJECT_ID }},ServiceName=${{ env.SERVICE }},ServiceImage=${{ steps.build-image.outputs.image }}"
+          parameter-overrides: "ProjectID=${{ env.PROJECT_ID }},ServiceName=${{ env.SERVICE }},ServiceImage=${{ steps.build-image.outputs.image }}"
 
       - name: ECS Service Deployment finished
         run: echo "ECS Service Deployment finished at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
