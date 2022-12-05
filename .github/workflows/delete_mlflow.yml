@@ -1,4 +1,4 @@
-name: (V2) Deploy MLFlow Service Infrastructure
+name: (V2) Delete MLFlow Service Infrastructure
 on:
   workflow_dispatch:
     inputs:
