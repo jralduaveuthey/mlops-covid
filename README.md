@@ -58,5 +58,5 @@ You can choose to reproduce all the steps of the process following the READMEs o
 
 # Github Versions for different Versions of the project
 - Project V1 - CU Task: 2u9yn99 - Github sha: 3a7197265fad1212399b61dac5219e5cf5a84874
-- Project V2 - CU Task: 34aghxe - Github sha: TBD
+- Project V2 - CU Task: 34aghxe - Github sha: 38f6af5836474cc518679b577bb2148926d1457c
 
