@@ -1,5 +1,5 @@
 s3fs
-prefect-aws
+prefect-aws==0.1.8
 sqlalchemy
 pandas
 sklearn
